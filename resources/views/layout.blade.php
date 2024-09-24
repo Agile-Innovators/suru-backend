@@ -12,6 +12,5 @@
     <section class="max-w-[90%] mx-auto">
         @yield('content')
     </section>
-    <h1 class="text-3xl text-pink-500">Ahí vamos</h1>
 </body>
 </html>

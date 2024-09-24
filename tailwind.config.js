@@ -11,7 +11,6 @@ export default {
         white: '#F8F8F8',
         primary: '#0A1029',
         secondary: '#003C55',
-        
         'light-blue': '#20B7DD',
         'translucid-blue': 'rgba(0, 201, 247, 0.25)',
         grey: '#6D7585',
