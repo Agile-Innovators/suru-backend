@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <p align="center">
     <a href="https://ibb.co/KNbHJgw">
         <img src="https://i.ibb.co/7gjFqD4/suru-light.png" width="200" alt="Suru Logo" border="0">
