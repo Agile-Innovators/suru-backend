@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -18,9 +17,13 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'username',          
         'name',
         'email',
         'password',
+        'phone_number',      
+        'profile_picture',    
+        'user_type_id',     
     ];
 
     /**
@@ -42,4 +45,47 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Relationships
+     */
+    public function userType()
+    {
+        return $this->belongsTo(UserType::class);
+    }
+
+    public function userProfile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    public function partnerProfile()
+    {
+        return $this->hasOne(PartnerProfile::class);
+    }
+
+    public function operationalHours()
+    {
+        return $this->hasMany(UserOperationalHour::class);
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'owner_id');
+    }
+
+    public function properties()
+    {
+        return $this->hasMany(Property::class);
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function userLocations()
+    {
+        return $this->hasMany(UserLocation::class);
+    }
 }
