@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Utility extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['name'];
+
+    public function properties()
+    {
+        return $this->belongsToMany(Property::class, 'property_utilities');
+    }
 }

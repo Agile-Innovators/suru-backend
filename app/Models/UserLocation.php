@@ -8,4 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 class UserLocation extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'partner_id',
+        'city_id',
+        'address',
+    ];
+
+    public function partnerProfile()
+    {
+        return $this->belongsTo(PartnerProfile::class);
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
 }
