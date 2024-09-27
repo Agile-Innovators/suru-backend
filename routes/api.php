@@ -10,8 +10,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 // Endpoints Authentication Module
-Route::post('/register/user', [UserController::class, 'registerUser']);
-Route::post('/register/partner', [UserController::class, 'registerPartner']);
+Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
 // Endpoints Users Module

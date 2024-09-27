@@ -68,9 +68,9 @@ class UserController extends Controller
     //Authentication Module
 
     /**
-     * Register a new normal user
+     * Register a user
      */
-    public function registerUser(Request $request)
+    public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'username' => 'required|string|unique:users,username',
@@ -91,7 +91,7 @@ class UserController extends Controller
                 'email' => $request->email,
                 'password' => bcrypt($request->password),
                 'user_type_id' => $request->user_type_id,
-                'profile_picture' => 'default.jpg',
+                'profile_picture' => 'users/default.jpg',
             ]);
 
             $user->save();
@@ -130,5 +130,38 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Login a user
+     */
+    public function login(Request $request){
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation errors occurred',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !password_verify($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid credentials',
+            ], 401);
+        }
+
+        $token = $user->createToken('Personal Access Token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'User logged in successfully',
+            'user' => $user,
+            'token' => $token
+        ], 200);
     }
 }
