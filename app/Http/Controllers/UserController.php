@@ -53,7 +53,82 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'username' => 'string|unique:users,username,' . $id,
+            'email' => 'email|unique:users,email,' . $id,
+            'description' => $user->user_type_id == 3 ? 'required|string' : 'nullable',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation errors occurred',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $fieldsToUpdate = [];
+            foreach ($request->all() as $key => $value) {
+                if ($key != 'password' && $user->$key != $value) {
+                    $fieldsToUpdate[$key] = $value;
+                }
+            }
+
+            if (!empty($fieldsToUpdate)) {
+                $user->update($fieldsToUpdate);
+            }
+
+            // Update profiles
+            switch ($user->user_type_id) {
+                case 2: // Regular user
+                    $userProfile = UserProfile::where('user_id', $id)->first();
+                    if ($userProfile) {
+                        $fieldsToUpdateProfile = [];
+                        foreach ($request->all() as $key => $value) {
+                            if ($userProfile->$key != $value) {
+                                $fieldsToUpdateProfile[$key] = $value;
+                            }
+                        }
+                        if (!empty($fieldsToUpdateProfile)) {
+                            $userProfile->update($fieldsToUpdateProfile);
+                        }
+                    }
+                    break;
+
+                case 3: // Partner
+                    $partnerProfile = PartnerProfile::where('user_id', $id)->first();
+                    if ($partnerProfile) {
+                        $fieldsToUpdatePartner = [];
+                        foreach ($request->all() as $key => $value) {
+                            if ($partnerProfile->$key != $value) {
+                                $fieldsToUpdatePartner[$key] = $value;
+                            }
+                        }
+                        if (!empty($fieldsToUpdatePartner)) {
+                            $partnerProfile->update($fieldsToUpdatePartner);
+                        }
+                    }
+                    break;
+            }
+
+            return response()->json([
+                'message' => 'User updated successfully',
+                'user' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating user',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -135,7 +210,8 @@ class UserController extends Controller
     /**
      * Login a user
      */
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string',
