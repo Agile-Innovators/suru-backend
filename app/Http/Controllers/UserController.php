@@ -8,6 +8,10 @@ use App\Models\UserType;
 use App\Models\UserProfile;
 use App\Models\PartnerProfile;
 use Illuminate\Support\Facades\Validator;
+//email provider
+use Resend\Laravel\Facades\Resend;
+//email template
+use App\Mail\Welcome;
 
 class UserController extends Controller
 {
@@ -119,11 +123,20 @@ class UserController extends Controller
 
             $token = $user->createToken('Personal Access Token')->plainTextToken;
 
+            Resend::emails()->send([
+                'from' => env('MAIL_FROM_NAME'). ' <' . env('MAIL_FROM_ADDRESS') . '>',
+                'to' => $user->email,
+                'subject' => 'Welcome To Suru Test',
+                'html' => (new Welcome($user->username))->render(),
+            ]);
+
             return response()->json([
                 'message' => 'User created successfully',
                 'user' => $user,
                 'token' => $token
             ], 201);
+
+            
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error creating user',
