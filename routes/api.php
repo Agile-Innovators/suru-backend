@@ -17,3 +17,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Endpoints Authentication Module
+
+
+// Endpoints Users Module
+
+
+// Endpoints Properties Module
+
+
+// Endpoints Partners Module
