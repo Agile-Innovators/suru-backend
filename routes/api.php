@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PropertyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 // Endpoints Properties Module
-
+Route::get('/properties', [PropertyController::class, 'index']);
+Route::post('/properties',[PropertyController::class, 'store']);
 
 // Endpoints Partners Module
