@@ -22,15 +22,12 @@ Route::get('/', function () {
 
 Route::get('/email', function () {
     // return new Welcome('Kevin');
-    $mail = new Welcome('Kevin');
 
-    Mail::to('kevinguidou@gmail.com')->send($mail);
-
-    // Resend::emails()->send([
-    //     'from' => 'Acme <onboarding@resend.dev>',
-    //     'to' => 'kevinguidou@gmail.com',
-    //     'subject' => 'hello world',
-    //     'html' => (new Welcome('kevin'))->render(),
-    // ]);
+    Resend::emails()->send([
+        'from' => env('MAIL_FROM_NAME'). ' <' . env('MAIL_FROM_ADDRESS') . '>',
+        'to' => 'correo@gmail.com',
+        'subject' => 'Testing Resend with Laravel 3',
+        'html' => (new Welcome('kevin'))->render(),
+    ]);
     
 });
