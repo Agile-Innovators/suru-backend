@@ -37,12 +37,17 @@ class PropertyController extends Controller
     {
         //
         
+        // return $request;
 
-        // if ($request->hasFile('images')) {
-        //     return response()->json(['message' => 'Images received', 'files' => $request->file('images')], 200);
-        // } else {
-        //     return response()->json(['message' => 'No images found'], 400);
-        // }
+        if ($request->hasFile('images')) {
+            return response()->json(['message' => 'Images received', 'files' => $request->file('images')], 200);
+        } else {
+            return response()->json(['message' => 'No images found'], 400);
+        }
+
+        // dd($request->all(), $request->file('images'));
+        
+
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
@@ -71,7 +76,7 @@ class PropertyController extends Controller
             ], 422);
         }
 
-        return response()->json($request->all());
+        
 
         $validateData = $validator->validated();
 
