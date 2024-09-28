@@ -32,5 +32,7 @@ Route::post('/login', [UserController::class, 'login']);
 // Endpoints Properties Module
 Route::get('/properties', [PropertyController::class, 'index']);
 Route::post('/properties',[PropertyController::class, 'store']);
+Route::delete('/properties/delete/{id}',[PropertyController::class, 'destroy']);
+Route::get('/properties/property/{id}', [PropertyController::class, 'show']);
 
 // Endpoints Partners Module

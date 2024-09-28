@@ -36,18 +36,12 @@ class PropertyController extends Controller
     public function store(Request $request)
     {
         //
-        
-        // return $request;
 
-        if ($request->hasFile('images')) {
-            return response()->json(['message' => 'Images received', 'files' => $request->file('images')], 200);
-        } else {
-            return response()->json(['message' => 'No images found'], 400);
-        }
+        // return $request->file();
+
+
 
         // dd($request->all(), $request->file('images'));
-        
-
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
@@ -66,7 +60,7 @@ class PropertyController extends Controller
             'property_transaction_type_id' => 'required|exists:property_transaction_types,id',
             'city_id' => 'required|exists:cities,id',
             'user_id' => 'required|exists:users,id',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -76,7 +70,11 @@ class PropertyController extends Controller
             ], 422);
         }
 
-        
+        if ($request->hasFile('images')) {
+            return response()->json(['message' => 'Images received', 'images' => $request->file('images')], 200);
+        } else {
+            return response()->json(['message' => 'No images found'], 400);
+        }
 
         $validateData = $validator->validated();
 
@@ -116,8 +114,6 @@ class PropertyController extends Controller
                 }
             }
 
-
-
             return response()->json([
                 'message' => 'Property created successfully',
                 'property' => $property,
@@ -137,6 +133,15 @@ class PropertyController extends Controller
     public function show(string $id)
     {
         //
+        $property = Property::with('propertyImages')->find($id);
+
+        if(!$property){
+            return response()->json([
+                'message' => 'Property not found'
+            ],404);
+        }
+
+        return response()->json($property);
     }
 
     /**
@@ -160,6 +165,18 @@ class PropertyController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $property = Property::find($id);
+
+        if (!$property) {
+            return response()->json([
+                'message' => 'Property not found',
+            ], 404); // Código de estado 404 Not Found
+        }
+
+        $property->delete();
+
+        return response()->json([
+            'message' => 'Property deleted successfully',
+        ], 200); // Código de estado 200 OK
     }
 }
