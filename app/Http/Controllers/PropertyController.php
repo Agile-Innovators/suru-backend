@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Property;
 use App\Models\PropertyImage;
 use Validator;
+use Log;
 
 class PropertyController extends Controller
 {
@@ -30,19 +31,9 @@ class PropertyController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    //test method
     public function store(Request $request)
     {
-        //
-
-        // return $request->file();
-
-
-
-        // dd($request->all(), $request->file('images'));
-
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
@@ -60,20 +51,14 @@ class PropertyController extends Controller
             'property_transaction_type_id' => 'required|exists:property_transaction_types,id',
             'city_id' => 'required|exists:cities,id',
             'user_id' => 'required|exists:users,id',
-            'images' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',  // Valida múltiples imágenes
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'Validation errors ocurred',
+                'message' => 'Validation errors occurred',
                 'errors' => $validator->errors(),
             ], 422);
-        }
-
-        if ($request->hasFile('images')) {
-            return response()->json(['message' => 'Images received', 'images' => $request->file('images')], 200);
-        } else {
-            return response()->json(['message' => 'No images found'], 400);
         }
 
         $validateData = $validator->validated();
@@ -99,18 +84,23 @@ class PropertyController extends Controller
             ]);
 
             if ($request->hasFile('images')) {
+                $imageCounter = 1; 
+            
                 foreach ($request->file('images') as $image) {
-                    // Generar un nombre único para cada archivo
-                    $file_name = 'property_' . uniqid() . '.' . $image->getClientOriginalExtension();
 
-                    // Guardar la imagen en la carpeta 'public/images'
-                    $path = $image->storeAs('public/images', $file_name);
-
-                    // Crear el registro de la imagen en la tabla 'property_images'
+                    $extension = $image->getClientOriginalExtension();
+            
+                    $file_name = 'property_' . $property->id . '_image' . $imageCounter .  '.' . $extension;
+            
+                    // Guardar la imagen en la carpeta 'public/images' usando storeAs()
+                    $path = $image->storeAs('public/images/properties', $file_name); 
+            
                     PropertyImage::create([
                         'property_id' => $property->id,
-                        'image_path' => $path, // Guardar la ruta completa
+                        'image_path' => $path,  
                     ]);
+            
+                    $imageCounter++;
                 }
             }
 
@@ -135,10 +125,10 @@ class PropertyController extends Controller
         //
         $property = Property::with('propertyImages')->find($id);
 
-        if(!$property){
+        if (!$property) {
             return response()->json([
                 'message' => 'Property not found'
-            ],404);
+            ], 404);
         }
 
         return response()->json($property);
@@ -157,7 +147,53 @@ class PropertyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+
+        return response()->json($request->all());
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'string',
+            'description' => 'string',
+            'price' => 'numeric',
+            'availability_date' => 'date',
+            'size_in_m2' => 'numeric',
+            'bedrooms' => 'numeric',
+            'bathrooms' => 'numeric',
+            'floors' => 'numeric',
+            'garages' => 'numeric',
+            'pools' => 'numeric',
+            'pets_allowed' => 'boolean',
+            'green_area' => 'boolean',
+            'property_category_id' => 'exists:property_categories,id',
+            'property_transaction_type_id' => 'exists:property_transaction_types,id',
+            'city_id' => 'exists:cities,id',
+            'user_id' => 'exists:users,id',
+            // 'images' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation errors ocurred',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validatedData = $validator->validated();
+
+        $property = Property::find($id);
+
+        if (!$property) {
+            return response()->json([
+                'message' => 'Property not found'
+            ], 404);
+        }
+
+        $property->update($validatedData);
+        $property->refresh();
+
+        return response()->json([
+            'message' => 'Property updated successfully',
+            'property' => $property,
+        ], 200);
     }
 
     /**
