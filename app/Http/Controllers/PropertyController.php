@@ -16,10 +16,9 @@ class PropertyController extends Controller
      */
     public function index()
     {
-        // Recuperar todas las propiedades
-        $properties = Property::all(); // O usa paginate() para paginación
 
-        // Devolver las propiedades en formato JSON
+        $properties = Property::with('propertyImages')->get();
+
         return response()->json($properties);
     }
 
