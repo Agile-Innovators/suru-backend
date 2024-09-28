@@ -20,14 +20,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
 // Endpoints Authentication Module
-Route::post('/register/user', [UserController::class, 'registerUser']);
-Route::post('/register/partner', [UserController::class, 'registerPartner']);
+Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
-// Endpoints Users Module
-
+//Endpoints Users Module
+Route::put('/user/{id}', [UserController::class, 'update']);
 
 // Endpoints Properties Module
 Route::get('/properties', [PropertyController::class, 'index']);

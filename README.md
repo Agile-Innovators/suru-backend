@@ -8,34 +8,60 @@
 Development of the backend infrastructure for the Suru platform to streamline the purchase, sale, and rental of properties.
 
 # Instructions
-### 1: Clone repository
+### 1: Clone repository  
+```bash
 git clone https://github.com/Agile-Innovators/suru-backend.git
-cd suru-backend
+```
 
-### 2: Install dependencies
+### 2: Install dependencies  
+```bash
 npm install
+```
 
-### 3: Create .env file
-cp .env.example .env.
+### 3: Create .env file  
+```bash
+cp .env.example .env
+```
 
-### 3: Generate application keys
+### 4: Generate application keys  
+```bash
 npm generate-keys
+```
 
-### 4: Configure the .env file
-Edit the .env file to configure the database connection. Make sure that the database details are correct and match the project name:
-DB_DATABASE=suru-backend
+### 5: Configure the .env file  
+Edit the .env file to configure the database connection and other necessary settings:
 
-### 5: Execute Database's migrations
+- **Database**: Set your database name
+  ```bash
+  DB_DATABASE=suru-backend
+  ```
+
+- **Resend configuration**: Set your Resend API key
+  ```bash
+  RESEND_API_KEY=your_resend_api_key_here
+  ```
+
+- **Email configuration**: Set the mailer settings
+  ```bash
+  MAIL_MAILER=resend
+  MAIL_FROM_ADDRESS="onboarding@resend.dev"
+  MAIL_FROM_NAME=Suru
+  ```
+
+### 6: Execute Database's migrations  
+```bash
 php artisan migrate
+```
 
-### 6: Load Seeders information
-npm run seeders
+### 7: Load Seeders information  
+```bash
+php artisan db:seed
+```
 
-### 7: Encrypt user passwords
-php artisan migrate:refresh --step=1 --path=database/migrations/2024_06_16_234743_encrypt_existing_passwords.php
-
-### 8: Start the project
+### 8: Start the project  
+```bash
 npm run dev
+```
 
 ### Contributors (Fullname/github users)
 * Ashley Rojas Pérez, @allyprz
