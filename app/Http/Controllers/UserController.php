@@ -198,12 +198,12 @@ class UserController extends Controller
 
             $token = $user->createToken('Personal Access Token')->plainTextToken;
 
-            Resend::emails()->send([
-                'from' => env('MAIL_FROM_NAME'). ' <' . env('MAIL_FROM_ADDRESS') . '>',
-                'to' => $user->email,
-                'subject' => 'Welcome To Suru Test',
-                'html' => (new Welcome($user->username))->render(),
-            ]);
+            // Resend::emails()->send([
+            //     'from' => env('MAIL_FROM_NAME'). ' <' . env('MAIL_FROM_ADDRESS') . '>',
+            //     'to' => $user->email,
+            //     'subject' => 'Welcome To Suru Test',
+            //     'html' => (new Welcome($user->username))->render(),
+            // ]);
 
             return response()->json([
                 'message' => 'User created successfully',
