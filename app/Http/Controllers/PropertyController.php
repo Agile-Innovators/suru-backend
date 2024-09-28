@@ -17,7 +17,35 @@ class PropertyController extends Controller
     public function index()
     {
 
-        $properties = Property::with('propertyImages')->get();
+        $properties = Property::select(
+            'properties.id',
+            'properties.title',
+            'properties.description',
+            'properties.price',
+            'properties.availability_date',
+            'properties.size_in_m2',
+            'properties.bedrooms',
+            'properties.bathrooms',
+            'properties.floors',
+            'properties.pools',
+            'properties.pets_allowed',
+            'properties.green_area',
+            'property_categories.name as property_category',
+            'property_transaction_types.name as property_transaction',
+            'cities.name as city',
+            'regions.name as region',
+            'properties.user_id',
+        )
+        ->join('property_categories', 'property_categories.id', '=' , 'properties.property_category_id')
+        ->join('property_transaction_types', 'property_transaction_types.id', '=' , 'properties.property_transaction_type_id')
+        ->join('cities', 'cities.id', '=' , 'properties.city_id')
+        ->join('regions', 'regions.id', '=' , 'cities.region_id')
+        ->get();
+
+        foreach ($properties as $property) {
+            $property->images = $property->propertyImages()->get();
+        }
+        
 
         return response()->json($properties);
     }
@@ -122,7 +150,34 @@ class PropertyController extends Controller
     public function show(string $id)
     {
         //
-        $property = Property::with('propertyImages')->find($id);
+        $property = Property::select(
+            'properties.id',
+            'properties.title',
+            'properties.description',
+            'properties.price',
+            'properties.availability_date',
+            'properties.size_in_m2',
+            'properties.bedrooms',
+            'properties.bathrooms',
+            'properties.floors',
+            'properties.pools',
+            'properties.pets_allowed',
+            'properties.green_area',
+            'property_categories.name as property_category',
+            'property_transaction_types.name as property_transaction',
+            'cities.name as city',
+            'regions.name as region',
+            'properties.user_id',
+        )
+        ->join('property_categories', 'property_categories.id', '=' , 'properties.property_category_id')
+        ->join('property_transaction_types', 'property_transaction_types.id', '=' , 'properties.property_transaction_type_id')
+        ->join('cities', 'cities.id', '=' , 'properties.city_id')
+        ->join('regions', 'regions.id', '=' , 'cities.region_id')
+        ->where('properties.id', $id)
+        ->first();
+
+        //property.id where properties.id = regions.property.id
+        $property->images = $property->propertyImages()->get();
 
         if (!$property) {
             return response()->json([
