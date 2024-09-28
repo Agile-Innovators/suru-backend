@@ -14,6 +14,7 @@ return [
     */
 
     'default' => env('MAIL_MAILER', 'smtp'),
+    // 'default' => 'resend',
 
     /*
     |--------------------------------------------------------------------------
@@ -94,6 +95,10 @@ return [
                 'postmark',
             ],
         ],
+
+        'resend' => [
+            'transport' => 'resend',
+        ]
     ],
 
     /*

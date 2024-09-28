@@ -1,6 +1,9 @@
 <?php
 
+use App\Mail\Welcome;
 use Illuminate\Support\Facades\Route;
+use Resend\Laravel\Facades\Resend;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -15,4 +18,16 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('layout');
+});
+
+Route::get('/email', function () {
+    // return new Welcome('Kevin');
+
+    Resend::emails()->send([
+        'from' => env('MAIL_FROM_NAME'). ' <' . env('MAIL_FROM_ADDRESS') . '>',
+        'to' => 'correo@gmail.com',
+        'subject' => 'Testing Resend with Laravel 3',
+        'html' => (new Welcome('kevin'))->render(),
+    ]);
+    
 });
