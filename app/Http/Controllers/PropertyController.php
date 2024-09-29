@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 
 use App\Models\Property;
 use App\Models\PropertyImage;
-use Validator;
-use Log;
+
+
+//Importar log y validator
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class PropertyController extends Controller
 {
@@ -78,7 +81,7 @@ class PropertyController extends Controller
             'property_transaction_type_id' => 'required|exists:property_transaction_types,id',
             'city_id' => 'required|exists:cities,id',
             'user_id' => 'required|exists:users,id',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',  // Valida múltiples imágenes
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',  
         ]);
 
         if ($validator->fails()) {
@@ -110,6 +113,8 @@ class PropertyController extends Controller
                 'user_id' => $validateData['user_id'],
             ]);
 
+            Log::debug('Contenido del request:', $request->all());
+
             if ($request->hasFile('images')) {
                 $imageCounter = 1; 
             
@@ -119,16 +124,20 @@ class PropertyController extends Controller
             
                     $file_name = 'property_' . $property->id . '_image' . $imageCounter .  '.' . $extension;
             
-                    // Guardar la imagen en la carpeta 'public/images' usando storeAs()
+                    // Save images in storage
                     $path = $image->storeAs('public/images/properties', $file_name); 
+
+                    Log::debug('Image path: ' . $path. ' - File name: ' . $file_name);
             
                     PropertyImage::create([
                         'property_id' => $property->id,
-                        'image_path' => $path,  
+                        'image_name' => $file_name,  
                     ]);
             
                     $imageCounter++;
                 }
+            }else{
+                Log::debug('No images found');
             }
 
             return response()->json([
