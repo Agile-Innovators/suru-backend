@@ -143,6 +143,50 @@ class UserController extends Controller
         //
     }
 
+    public function updatePassword(Request $request, string $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:8',
+            'confirm_password' => 'required|string|same:new_password'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation errors occurred',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        if (!password_verify($request->old_password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid old password',
+            ], 401);
+        }
+
+        try {
+            $user->update([
+                'password' => bcrypt($request->new_password),
+            ]);
+
+            return response()->json([
+                'message' => 'Password updated successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating password',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     //Authentication Module
 
