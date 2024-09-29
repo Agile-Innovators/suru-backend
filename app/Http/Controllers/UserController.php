@@ -15,6 +15,7 @@ use App\Mail\Welcome;
 
 class UserController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      */
@@ -170,6 +171,45 @@ class UserController extends Controller
             return response()->json([
                 'message' => 'Invalid old password',
             ], 401);
+        }
+
+        try {
+            $user->update([
+                'password' => bcrypt($request->new_password),
+            ]);
+
+            return response()->json([
+                'message' => 'Password updated successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating password',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'new_password' => 'required|string|min:8',
+            'confirm_password' => 'required|string|same:new_password'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation errors occurred',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+            ], 404);
         }
 
         try {
