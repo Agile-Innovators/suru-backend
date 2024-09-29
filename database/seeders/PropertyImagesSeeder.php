@@ -15,32 +15,32 @@ class PropertyImagesSeeder extends Seeder
     {
         PropertyImage::create([
             'property_id' => 1, 
-            'image_path' => 'images/properties/property1_image1.jpg',
+            'image_name' => 'property1_image1.jpg',
         ]);
 
         PropertyImage::create([
             'property_id' => 1,
-            'image_path' => 'images/properties/property1_image2.jpg',
+            'image_name' => 'property1_image2.jpg',
         ]);
 
         PropertyImage::create([
             'property_id' => 1,
-            'image_path' => 'images/properties/property1_image3.jpg',
+            'image_name' => 'property1_image3.jpg',
         ]);
 
         PropertyImage::create([
             'property_id' => 1,
-            'image_path' => 'images/properties/property1_image4.jpg',
+            'image_name' => 'property1_image4.jpg',
         ]);
 
         PropertyImage::create([
             'property_id' => 1,
-            'image_path' => 'images/properties/property1_image5.jpg',
+            'image_name' => 'property1_image5.jpg',
         ]);
 
         PropertyImage::create([
             'property_id' => 1,
-            'image_path' => 'images/properties/property1_image6.jpg',
+            'image_name' => 'property1_image6.jpg',
         ]);
     }
 }
