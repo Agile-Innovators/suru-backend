@@ -36,5 +36,6 @@ Route::post('/properties',[PropertyController::class, 'store']);
 Route::delete('/properties/delete/{id}',[PropertyController::class, 'destroy']);
 Route::get('/properties/property/{id}', [PropertyController::class, 'show']);
 Route::put('/properties/update/{id}', [PropertyController::class, 'update']);
+Route::get('/properties/user/{id}', [PropertyController::class, 'getUserProperties']);
 
 // Endpoints Partners Module

@@ -320,4 +320,9 @@ class PropertyController extends Controller
             'message' => 'Property deleted successfully',
         ], 200); // Código de estado 200 OK
     }
+
+    public function getUserProperties(string $id)
+    {
+        return response()->json(Property::where('user_id', $id)->get());
+    }
 }
