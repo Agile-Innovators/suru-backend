@@ -254,7 +254,7 @@ class UserController extends Controller
                 'email' => $request->email,
                 'password' => bcrypt($request->password),
                 'user_type_id' => $request->user_type_id,
-                'profile_picture' => 'users/default.jpg',
+                'profile_picture' => 'default.jpg',
             ]);
 
             $user->save();
