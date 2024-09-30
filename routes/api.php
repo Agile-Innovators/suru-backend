@@ -28,6 +28,7 @@ Route::post('/login', [UserController::class, 'login']);
 Route::put('/user/update/{id}', [UserController::class, 'update']);
 Route::post('/user/{id}/update-password', [UserController::class, 'updatePassword']);
 Route::post('/user/reset-password', [UserController::class, 'resetPassword']);
+Route::post('/user/update/operational-hours/{id}', [UserController::class, 'updateOperationalHours']);
 
 // Endpoints Properties Module
 Route::get('/properties', [PropertyController::class, 'index']);

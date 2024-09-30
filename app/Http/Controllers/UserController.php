@@ -216,6 +216,56 @@ class UserController extends Controller
         }
     }
 
+    public function updateOperationalHours(Request $request, string $userId)
+    {
+        $validator = Validator::make($request->all(), [
+            'operational_hours' => 'required|array',
+            'operational_hours.*.day_of_week' => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'operational_hours.*.start_time' => 'required|date_format:H:i',
+            'operational_hours.*.end_time' => 'required|date_format:H:i|after:operational_hours.*.start_time',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation errors occurred',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            foreach ($request->operational_hours as $operationalHour) {
+                $existingOperationalHour = UserOperationalHour::where('user_id', $userId)
+                    ->where('day_of_week', $operationalHour['day_of_week'])
+                    ->first();
+
+                if ($existingOperationalHour) {
+                    $existingOperationalHour->update([
+                        'start_time' => $operationalHour['start_time'],
+                        'end_time' => $operationalHour['end_time'],
+                    ]);
+                } else {
+                    UserOperationalHour::create([
+                        'user_id' => $userId,
+                        'day_of_week' => $operationalHour['day_of_week'],
+                        'start_time' => $operationalHour['start_time'],
+                        'end_time' => $operationalHour['end_time'],
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'message' => 'Operational hours updated successfully',
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error updating operational hours',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
     public function resetPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
