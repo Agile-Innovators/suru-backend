@@ -4,18 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\UserType;
+use App\Models\UserOperationalHour;
 use App\Models\UserProfile;
 use App\Models\PartnerProfile;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
 //email provider
 use Resend\Laravel\Facades\Resend;
 //email template
 use App\Mail\Welcome;
-
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -306,6 +305,18 @@ class UserController extends Controller
 
                     $partnerProfile->save();
                     break;
+            }
+
+            // Creating user operational hours per default
+            $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            foreach ($days as $day) {
+                $userOperationalHour = new UserOperationalHour([
+                    'user_id' => $user_id,
+                    'day_of_week' => $day,
+                    'start_time' => '09:00:00',
+                    'end_time' => '17:00:00',
+                ]);
+                $userOperationalHour->save();
             }
 
             $token = $user->createToken('Personal Access Token')->plainTextToken;
