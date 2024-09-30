@@ -25,7 +25,7 @@ Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
 //Endpoints Users Module
-Route::put('/user/{id}', [UserController::class, 'update']);
+Route::put('/user/update/{id}', [UserController::class, 'update']);
 Route::post('/user/{id}/update-password', [UserController::class, 'updatePassword']);
 Route::post('/user/reset-password', [UserController::class, 'resetPassword']);
 

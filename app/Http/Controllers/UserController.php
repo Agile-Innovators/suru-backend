@@ -13,6 +13,10 @@ use Resend\Laravel\Facades\Resend;
 //email template
 use App\Mail\Welcome;
 
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+
 class UserController extends Controller
 {
 
@@ -65,11 +69,21 @@ class UserController extends Controller
                 'message' => 'User not found',
             ], 404);
         }
+        Log::info('Request data!!!:', $request->all());
 
         $validator = Validator::make($request->all(), [
-            'username' => 'string|unique:users,username,' . $id,
-            'email' => 'email|unique:users,email,' . $id,
+           'username' => 'required|string|unique:users,username,' . $user->id, 
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'name' => 'required|string',
+            'phone_number' => 'required|string',
+            
+            //Validations for regular users
+            'lastname1' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
+            'lastname2' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
+
+            //Validations for partners
             'description' => $user->user_type_id == 3 ? 'required|string' : 'nullable',
+            'website_url' => $user->user_type_id == 3 ? 'required|string' : 'nullable'
         ]);
 
         if ($validator->fails()) {
@@ -122,6 +136,20 @@ class UserController extends Controller
                         }
                     }
                     break;
+            }
+
+            // Updating profile picture and deleting old one if it's not the default one
+            if ($request->hasFile('profile_picture')) {
+                $image_to_remove = 'public/images/users/' . $user->profile_picture;
+                
+                if ($user->profile_picture != 'user_default.jpg' && Storage::exists($image_to_remove)) {
+                    Storage::delete($image_to_remove);
+                }
+    
+                $image = $request->file('profile_picture');
+                $filename = 'user_' . $user->id . '.' . $image->getClientOriginalExtension();
+                $image->storeAs('public/images/users', $filename);
+                $user->update(['profile_picture' => $filename]);
             }
 
             return response()->json([
