@@ -6,8 +6,13 @@ use Illuminate\Http\Request;
 
 use App\Models\Property;
 use App\Models\PropertyImage;
-use Validator;
-use Log;
+
+
+//Importar log y validator
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class PropertyController extends Controller
 {
@@ -16,10 +21,37 @@ class PropertyController extends Controller
      */
     public function index()
     {
-        // Recuperar todas las propiedades
-        $properties = Property::all(); // O usa paginate() para paginación
 
-        // Devolver las propiedades en formato JSON
+        $properties = Property::select(
+            'properties.id',
+            'properties.title',
+            'properties.description',
+            'properties.price',
+            'properties.availability_date',
+            'properties.size_in_m2',
+            'properties.bedrooms',
+            'properties.bathrooms',
+            'properties.floors',
+            'properties.pools',
+            'properties.pets_allowed',
+            'properties.green_area',
+            'property_categories.name as property_category',
+            'property_transaction_types.name as property_transaction',
+            'cities.name as city',
+            'regions.name as region',
+            'properties.user_id',
+        )
+        ->join('property_categories', 'property_categories.id', '=' , 'properties.property_category_id')
+        ->join('property_transaction_types', 'property_transaction_types.id', '=' , 'properties.property_transaction_type_id')
+        ->join('cities', 'cities.id', '=' , 'properties.city_id')
+        ->join('regions', 'regions.id', '=' , 'cities.region_id')
+        ->get();
+
+        foreach ($properties as $property) {
+            $property->images = $property->propertyImages()->get();
+        }
+        
+
         return response()->json($properties);
     }
 
@@ -51,7 +83,7 @@ class PropertyController extends Controller
             'property_transaction_type_id' => 'required|exists:property_transaction_types,id',
             'city_id' => 'required|exists:cities,id',
             'user_id' => 'required|exists:users,id',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',  // Valida múltiples imágenes
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',  
         ]);
 
         if ($validator->fails()) {
@@ -83,6 +115,8 @@ class PropertyController extends Controller
                 'user_id' => $validateData['user_id'],
             ]);
 
+            Log::debug('Contenido del request:', $request->all());
+
             if ($request->hasFile('images')) {
                 $imageCounter = 1; 
             
@@ -90,18 +124,22 @@ class PropertyController extends Controller
 
                     $extension = $image->getClientOriginalExtension();
             
-                    $file_name = 'property_' . $property->id . '_image' . $imageCounter .  '.' . $extension;
+                    $file_name = 'property' . $property->id . '_image' . uniqid() .  '.' . $extension;
             
-                    // Guardar la imagen en la carpeta 'public/images' usando storeAs()
+                    // Save images in storage
                     $path = $image->storeAs('public/images/properties', $file_name); 
+
+                    Log::debug('Image path: ' . $path. ' - File name: ' . $file_name);
             
                     PropertyImage::create([
                         'property_id' => $property->id,
-                        'image_path' => $path,  
+                        'image_name' => $file_name,  
                     ]);
             
                     $imageCounter++;
                 }
+            }else{
+                Log::debug('No images found');
             }
 
             return response()->json([
@@ -123,7 +161,34 @@ class PropertyController extends Controller
     public function show(string $id)
     {
         //
-        $property = Property::with('propertyImages')->find($id);
+        $property = Property::select(
+            'properties.id',
+            'properties.title',
+            'properties.description',
+            'properties.price',
+            'properties.availability_date',
+            'properties.size_in_m2',
+            'properties.bedrooms',
+            'properties.bathrooms',
+            'properties.floors',
+            'properties.pools',
+            'properties.pets_allowed',
+            'properties.green_area',
+            'property_categories.name as property_category',
+            'property_transaction_types.name as property_transaction',
+            'cities.name as city',
+            'regions.name as region',
+            'properties.user_id',
+        )
+        ->join('property_categories', 'property_categories.id', '=' , 'properties.property_category_id')
+        ->join('property_transaction_types', 'property_transaction_types.id', '=' , 'properties.property_transaction_type_id')
+        ->join('cities', 'cities.id', '=' , 'properties.city_id')
+        ->join('regions', 'regions.id', '=' , 'cities.region_id')
+        ->where('properties.id', $id)
+        ->first();
+
+        //property.id where properties.id = regions.property.id
+        $property->images = $property->propertyImages()->get();
 
         if (!$property) {
             return response()->json([
@@ -147,8 +212,7 @@ class PropertyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-
-        return response()->json($request->all());
+        // return response()->json($request->all());
 
         $validator = Validator::make($request->all(), [
             'title' => 'string',
@@ -167,7 +231,9 @@ class PropertyController extends Controller
             'property_transaction_type_id' => 'exists:property_transaction_types,id',
             'city_id' => 'exists:cities,id',
             'user_id' => 'exists:users,id',
-            // 'images' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'existing_images_id' => 'array',
+            'existing_images_id.*' => 'exists:property_images,id',
         ]);
 
         if ($validator->fails()) {
@@ -185,6 +251,45 @@ class PropertyController extends Controller
             return response()->json([
                 'message' => 'Property not found'
             ], 404);
+        }
+
+        $existingImages = $property->propertyImages->pluck('id')->toArray();
+        
+        $imagesToKeep = $request->input('existing_images_id', []);
+
+        //array_diff() devuelve los valores que estan presentes en el primer array pero no los que estan en el segundo
+        $imagesToDelete = array_diff($existingImages, $imagesToKeep);
+
+        foreach ($imagesToDelete as $imageId) {
+            $image = PropertyImage::findOrFail($imageId);
+            // return $image;
+            // return $image->image_name;
+            // Eliminar del almacenamiento
+            Storage::disk('public')->delete('images/properties/' . $image->image_name);
+            // File::delete('storage/images/properties/' . $image->name);
+    
+            // Eliminar de la base de datos
+            $image->delete();
+        }
+
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+
+                $extension = $image->getClientOriginalExtension();
+        
+                $file_name = 'property' . $property->id . '_image' . uniqid() .  '.' . $extension;
+        
+                // Save images in storage
+                $path = $image->storeAs('public/images/properties', $file_name); 
+
+                Log::debug('Image path: ' . $path. ' - File name: ' . $file_name);
+        
+                PropertyImage::create([
+                    'property_id' => $property->id,
+                    'image_name' => $file_name,  
+                ]);
+            }
         }
 
         $property->update($validatedData);
