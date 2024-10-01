@@ -55,6 +55,6 @@ class Property extends Model
 
     public function utilities()
     {
-        return $this->belongsToMany(PropertyUtility::class, 'properties_utilities_assignment');
+        return $this->belongsToMany(Utility::class, 'property_utilities', 'property_id', 'utility_id');
     }
 }
