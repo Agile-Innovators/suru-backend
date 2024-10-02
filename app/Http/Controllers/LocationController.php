@@ -76,6 +76,34 @@ class LocationController extends Controller
         ]);
     }
 
+    public function unlinkUserLocation(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+            'city_id' => 'required|exists:cities,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::find($request->user_id);
+
+        $userLocation = UserLocation::where('user_id', $user->id)
+            ->where('city_id', $request->city)
+            ->first();
+
+        if ($userLocation) {
+            $userLocation->delete();
+        }
+
+        return response()->json([
+            'message' => 'User location unlinked successfully',
+        ]);
+    }
     
 
 }
