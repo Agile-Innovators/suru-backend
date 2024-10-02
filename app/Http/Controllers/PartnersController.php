@@ -22,5 +22,20 @@ class PartnersController extends Controller
         return response()->json($categories);
     }
 
+    public function getAllPartners()
+    {
+        $partners = PartnerProfile::select(
+            'partner_profiles.description',
+            'partner_categories.name',
+            'users.name as partner_name',
+            'users.profile_picture as image' 
+        )
+        ->join('users', 'partner_profiles.user_id', '=', 'users.id')
+        ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
+        ->get();
+
+        return response()->json($partners);
+    }
+
     
 }

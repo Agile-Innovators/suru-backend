@@ -36,3 +36,4 @@ Route::post('/locations/associate-user', [LocationController::class, 'associateU
 
 // Endpoints Partners Module
 Route::get('/partners-categories', [PartnersController::class, 'getPartnersCategories']);
+Route::get('/partners', [PartnersController::class, 'getAllPartners']);
