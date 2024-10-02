@@ -37,5 +37,25 @@ class PartnersController extends Controller
         return response()->json($partners);
     }
 
-    
+    public function getPartnersByCategory(string $category_id)
+    {
+        $category = PartnerCategory::find($category_id);
+        
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        $partners = PartnerProfile::select(
+            'partner_profiles.description',
+            'partner_categories.name',
+            'users.name as partner_name',
+            'users.profile_picture as image' 
+        )
+        ->join('users', 'partner_profiles.user_id', '=', 'users.id')
+        ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
+        ->where('partner_profiles.partner_category_id', $category_id)
+        ->get();
+
+        return response()->json($partners);
+    }
 }
