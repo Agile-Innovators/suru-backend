@@ -14,6 +14,8 @@ class PropertyImage extends Model
         'image_name',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+    
     public function property()
     {
         return $this->belongsTo(Property::class);
