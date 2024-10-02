@@ -13,6 +13,7 @@ class Property extends Model
         'title',
         'description',
         'price',
+        'deposit_price',
         'availability_date',
         'size_in_m2',
         'bedrooms',
@@ -25,6 +26,7 @@ class Property extends Model
         'property_category_id',
         'property_transaction_type_id',
         'city_id',
+        'currency_id',
         'user_id',
     ];
 
@@ -46,6 +48,16 @@ class Property extends Model
     public function propertyTransactionType()
     {
         return $this->belongsTo(PropertyTransactionType::class);
+    }
+
+    public function propertyPaymentFrequency()
+    {
+        return $this->belongsTo(PaymentFrequency::class);
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     public function city()

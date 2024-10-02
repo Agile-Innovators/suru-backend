@@ -40,18 +40,20 @@ class PropertyController extends Controller
             'property_transaction_types.name as property_transaction',
             'cities.name as city',
             'regions.name as region',
+            'currencies.code as currency_code',
             'properties.user_id',
         )
-        ->join('property_categories', 'property_categories.id', '=' , 'properties.property_category_id')
-        ->join('property_transaction_types', 'property_transaction_types.id', '=' , 'properties.property_transaction_type_id')
-        ->join('cities', 'cities.id', '=' , 'properties.city_id')
-        ->join('regions', 'regions.id', '=' , 'cities.region_id')
-        ->get();
+            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->join('cities', 'cities.id', '=', 'properties.city_id')
+            ->join('regions', 'regions.id', '=', 'cities.region_id')
+            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->get();
 
         foreach ($properties as $property) {
             $property->images = $property->propertyImages()->get();
         }
-        
+
 
         return response()->json($properties);
     }
@@ -84,10 +86,11 @@ class PropertyController extends Controller
             'property_category_id' => 'required|exists:property_categories,id',
             'property_transaction_type_id' => 'required|exists:property_transaction_types,id',
             'city_id' => 'required|exists:cities,id',
+            'currency_id' => 'required|exists:currencies,id',
             'user_id' => 'required|exists:users,id',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'utilities' => 'sometimes|array',  
-            'utilities.*' => 'integer|exists:utilities,id',  
+            'utilities' => 'sometimes|array',
+            'utilities.*' => 'integer|exists:utilities,id',
         ]);
 
         if ($validator->fails()) {
@@ -116,6 +119,7 @@ class PropertyController extends Controller
                 'property_category_id' => $validateData['property_category_id'],
                 'property_transaction_type_id' => $validateData['property_transaction_type_id'],
                 'city_id' => $validateData['city_id'],
+                'currency_id' => $validateData['currency_id'],
                 'user_id' => $validateData['user_id'],
             ]);
 
@@ -124,21 +128,21 @@ class PropertyController extends Controller
             }
 
             if ($request->hasFile('images')) {
-            
+
                 foreach ($request->file('images') as $image) {
 
                     $extension = $image->getClientOriginalExtension();
-            
-                    $file_name = 'property' . $property->id . '_image' . uniqid() .  '.' . $extension;
-            
+
+                    $file_name = 'property' . $property->id . '_image' . uniqid() . '.' . $extension;
+
                     // Save images in storage
-                    $path = $image->storeAs('public/images/properties', $file_name); 
-            
+                    $path = $image->storeAs('public/images/properties', $file_name);
+
                     PropertyImage::create([
                         'property_id' => $property->id,
-                        'image_name' => $file_name,  
+                        'image_name' => $file_name,
                     ]);
-            
+
                 }
             }
 
@@ -178,14 +182,16 @@ class PropertyController extends Controller
             'property_transaction_types.name as property_transaction',
             'cities.name as city',
             'regions.name as region',
+            'currencies.code as currency_code',
             'properties.user_id',
         )
-        ->join('property_categories', 'property_categories.id', '=' , 'properties.property_category_id')
-        ->join('property_transaction_types', 'property_transaction_types.id', '=' , 'properties.property_transaction_type_id')
-        ->join('cities', 'cities.id', '=' , 'properties.city_id')
-        ->join('regions', 'regions.id', '=' , 'cities.region_id')
-        ->where('properties.id', $id)
-        ->first();
+            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->join('cities', 'cities.id', '=', 'properties.city_id')
+            ->join('regions', 'regions.id', '=', 'cities.region_id')
+            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->where('properties.id', $id)
+            ->first();
 
         $property->images = $property->propertyImages()->get();
         $property->utilities = $property->utilities()->get();
@@ -230,10 +236,11 @@ class PropertyController extends Controller
             'property_transaction_type_id' => 'exists:property_transaction_types,id',
             'city_id' => 'exists:cities,id',
             'user_id' => 'exists:users,id',
+            'currency_id' => 'exists:currencies,id',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'existing_images_id' => 'array',
             'existing_images_id.*' => 'exists:property_images,id',
-            'utilities' => 'sometimes|array',  
+            'utilities' => 'sometimes|array',
             'utilities.*' => 'integer|exists:utilities,id',
         ]);
 
@@ -255,7 +262,7 @@ class PropertyController extends Controller
         }
 
         $existingImages = $property->propertyImages->pluck('id')->toArray();
-        
+
         $imagesToKeep = $request->input('existing_images_id', []);
 
         //array_diff() devuelve los valores que estan presentes en el primer array pero no los que estan en el segundo
@@ -274,16 +281,16 @@ class PropertyController extends Controller
             foreach ($request->file('images') as $image) {
 
                 $extension = $image->getClientOriginalExtension();
-        
-                $file_name = 'property' . $property->id . '_image' . uniqid() .  '.' . $extension;
-        
-                $path = $image->storeAs('public/images/properties', $file_name); 
 
-                Log::debug('Image path: ' . $path. ' - File name: ' . $file_name);
-        
+                $file_name = 'property' . $property->id . '_image' . uniqid() . '.' . $extension;
+
+                $path = $image->storeAs('public/images/properties', $file_name);
+
+                Log::debug('Image path: ' . $path . ' - File name: ' . $file_name);
+
                 PropertyImage::create([
                     'property_id' => $property->id,
-                    'image_name' => $file_name,  
+                    'image_name' => $file_name,
                 ]);
             }
         }
@@ -312,30 +319,57 @@ class PropertyController extends Controller
         if (!$property) {
             return response()->json([
                 'message' => 'Property not found',
-            ], 404); 
+            ], 404);
         }
 
         $property->delete();
 
         return response()->json([
             'message' => 'Property deleted successfully',
-        ], 200); 
+        ], 200);
     }
 
     public function getUserProperties(string $id)
     {
-        $properties = Property::where('user_id', $id)->get();
-        
-        if ($properties->isEmpty()) {
+
+        $property = Property::select(
+            'properties.id',
+            'properties.title',
+            'properties.description',
+            'properties.price',
+            'properties.availability_date',
+            'properties.size_in_m2',
+            'properties.bedrooms',
+            'properties.bathrooms',
+            'properties.floors',
+            'properties.pools',
+            'properties.pets_allowed',
+            'properties.green_area',
+            'property_categories.name as property_category',
+            'property_transaction_types.name as property_transaction',
+            'cities.name as city',
+            'regions.name as region',
+            'currencies.code as currency_code',
+        )
+            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->join('cities', 'cities.id', '=', 'properties.city_id')
+            ->join('regions', 'regions.id', '=', 'cities.region_id')
+            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->where('user_id', $id)
+            ->get();
+
+        if ($property->isEmpty()) {
             return response()->json([
                 'message' => 'There are no properties'
             ], 404);
         }
-        return response()->json($properties);
+        return response()->json($property);
     }
 
-    public function filterProperty(Request $request){
-       
+    public function filterProperty(Request $request)
+    {
+
         $regionId = $request->query('regionId');
         $minPrice = $request->query('minPrice');
         $maxPrice = $request->query('maxPrice');
@@ -345,27 +379,61 @@ class PropertyController extends Controller
             return response()->json(['error' => 'El precio mínimo no puede ser mayor que el precio máximo'], 400);
         }
 
-        $query = Property::query();
-        if($propertyCategoryId){
+        // $query = Property::query();
+
+        $query = Property::query()
+            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->join('cities', 'cities.id', '=', 'properties.city_id')
+            ->join('regions', 'regions.id', '=', 'cities.region_id')
+            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->select(
+                'properties.id',
+                'properties.title',
+                'properties.description',
+                'properties.price',
+                'properties.availability_date',
+                'properties.size_in_m2',
+                'properties.bedrooms',
+                'properties.bathrooms',
+                'properties.floors',
+                'properties.pools',
+                'properties.pets_allowed',
+                'properties.green_area',
+                'property_categories.name as property_category',
+                'property_transaction_types.name as property_transaction',
+                'cities.name as city',
+                'regions.name as region',
+                'currencies.code as currency_code',
+                'properties.user_id',
+            );
+
+        if ($propertyCategoryId) {
             $query->where('property_category_id', $propertyCategoryId);
         }
 
-        if($regionId){
+        if ($regionId) {
             //pluck() = obtiene un valor especifico o una lista de valores
             $citiesId = City::where('region_id', $regionId)->pluck('id');
             $query->whereIn('city_id', $citiesId);
         }
 
-        if($minPrice){
+        if ($minPrice) {
             $query->where('price', '>=', $minPrice);
         }
-        if($maxPrice){
+        if ($maxPrice) {
             $query->where('price', '<=', $maxPrice);
         }
-        
+
+
 
         $properties = $query->get();
 
-        return response()->json($properties);  
+        foreach ($properties as $property) {
+            $property->images = $property->propertyImages()->get();
+            $property->utilities = $property->utilities()->get();
+        }
+
+        return response()->json($properties);
     }
 }
