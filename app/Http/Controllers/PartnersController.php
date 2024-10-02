@@ -27,7 +27,7 @@ class PartnersController extends Controller
     {
         $partners = PartnerProfile::select(
             'partner_profiles.description',
-            'partner_categories.name',
+            'partner_categories.name as category_name',
             'users.name as partner_name',
             'users.profile_picture as image'
         )
@@ -48,7 +48,7 @@ class PartnersController extends Controller
 
         $partners = PartnerProfile::select(
             'partner_profiles.description',
-            'partner_categories.name',
+            'partner_categories.name as category_name',
             'users.name as partner_name',
             'users.profile_picture as image'
         )
@@ -142,5 +142,26 @@ class PartnersController extends Controller
         }
 
         return response()->json(['message' => 'Services updated successfully'], 201);
+    }
+
+    public function addBusinessService(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'partner_category_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $businessService = BusinessService::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'partner_category_id' => $request->partner_category_id,
+        ]);
+
+        return response()->json($businessService, 201);
     }
 }
