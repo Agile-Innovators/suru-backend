@@ -13,6 +13,7 @@ class Property extends Model
         'title',
         'description',
         'price',
+        'deposit_price',
         'availability_date',
         'size_in_m2',
         'bedrooms',
