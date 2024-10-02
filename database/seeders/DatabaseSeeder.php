@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UserTypesSeeder::class,
             UsersSeeder::class,
             UserProfilesSeeder::class,
+            PaymentFrequencySeeder::class,
             PartnerCategoriesSeeder::class,
             PartnerProfilesSeeder::class,
             UserOperationalHoursSeeder::class,

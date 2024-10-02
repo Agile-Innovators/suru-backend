@@ -49,6 +49,11 @@ class Property extends Model
         return $this->belongsTo(PropertyTransactionType::class);
     }
 
+    public function propertyPaymentFrequency()
+    {
+        return $this->belongsTo(PaymentFrequency::class);
+    }
+
     public function city()
     {
         return $this->belongsTo(City::class);
