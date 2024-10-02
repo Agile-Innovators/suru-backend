@@ -31,5 +31,6 @@ Route::get('/properties/filter', [PropertyController::class, 'filterProperty']);
 
 // Endpoints Locations Module
 Route::get('/locations', [LocationController::class, 'getAllLocations']);
+Route::post('/locations/associate-user', [LocationController::class, 'associateUserWithLocation']);
 
 // Endpoints Partners Module
