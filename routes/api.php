@@ -38,3 +38,4 @@ Route::post('/locations/associate-user', [LocationController::class, 'associateU
 Route::get('/partners-categories', [PartnersController::class, 'getPartnersCategories']);
 Route::get('/partners', [PartnersController::class, 'getAllPartners']);
 Route::get('/partners/{category}', [PartnersController::class, 'getPartnersByCategory']);
+Route::get('/partner/{id}', [PartnersController::class, 'getPartnerById']);

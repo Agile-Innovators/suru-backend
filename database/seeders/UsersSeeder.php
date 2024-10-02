@@ -36,9 +36,10 @@ class UsersSeeder extends Seeder
         
         User::create([
             'username' => 'partneruser',
+            'name'=> 'Partner User',
             'email' => 'partneruser@example.com',
             'password' => bcrypt('partner_password'), 
-            'phone_number' => '+1122334455',
+            'phone_number' => '1122334455',
             'profile_picture' => 'default.jpg',
             'user_type_id' => 3, // Partner
             'created_at' => now(),
