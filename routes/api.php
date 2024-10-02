@@ -39,3 +39,4 @@ Route::get('/partners-categories', [PartnersController::class, 'getPartnersCateg
 Route::get('/partners', [PartnersController::class, 'getAllPartners']);
 Route::get('/partners/{category}', [PartnersController::class, 'getPartnersByCategory']);
 Route::get('/partner/{id}', [PartnersController::class, 'getPartnerById']);
+Route::get('/partner-services/{id}', [PartnersController::class, 'getPartnerServices']);
