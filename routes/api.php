@@ -40,3 +40,4 @@ Route::get('/partners', [PartnersController::class, 'getAllPartners']);
 Route::get('/partners/{category}', [PartnersController::class, 'getPartnersByCategory']);
 Route::get('/partner/{id}', [PartnersController::class, 'getPartnerById']);
 Route::get('/partner-services/{id}', [PartnersController::class, 'getPartnerServices']);
+Route::post('/partner-add-services/{user_id}', [PartnersController::class, 'addServicesToPartner']);

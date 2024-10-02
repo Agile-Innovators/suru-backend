@@ -105,4 +105,42 @@ class PartnersController extends Controller
         return response()->json($services);
     }
 
+    public function addServicesToPartner(Request $request, int $userId)
+    {
+        $request->validate([
+            'services' => 'required|array',
+            'services.*.id' => 'required|exists:business_services,id',
+            'services.*.price' => 'required|numeric',
+            'services.*.price_max' => 'nullable|numeric',
+        ]);
+
+        $partnerProfile = PartnerProfile::where('user_id', $userId)->first();
+
+        if (!$partnerProfile) {
+            return response()->json(['message' => 'Partner profile not found'], 404);
+        }
+
+        foreach ($request->services as $serviceData) {
+            $existingService = PartnerService::where('partner_id', $partnerProfile->user_id)
+                ->where('business_service_id', $serviceData['id'])
+                ->first();
+
+            // If the service doesn't exist, create it. Otherwise, update it.
+            if (!$existingService) {
+                PartnerService::create([
+                    'partner_id' => $partnerProfile->user_id,
+                    'business_service_id' => $serviceData['id'],
+                    'price' => $serviceData['price'],
+                    'price_max' => $serviceData['price_max'],
+                ]);
+            }else{
+                $existingService->update([
+                    'price' => $serviceData['price'],
+                    'price_max' => $serviceData['price_max'],
+                ]);
+            }
+        }
+
+        return response()->json(['message' => 'Services updated successfully'], 201);
+    }
 }
