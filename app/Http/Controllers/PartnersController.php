@@ -101,9 +101,9 @@ class PartnersController extends Controller
     }
 
 
-    public function getPartnerServices(string $id)
+    public function getPartnerServices(string $user_id)
     {
-        $partner = PartnerProfile::find($id);
+        $partner = PartnerProfile::where('user_id', $user_id)->first();
 
         if (!$partner) {
             return response()->json(['message' => 'Partner not found'], 404);
