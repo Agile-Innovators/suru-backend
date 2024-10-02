@@ -91,7 +91,7 @@ class PartnersController extends Controller
 
                 return [
                     'name' => $locationName,
-                    'value' => $city->id, 
+                    'value' => $city->id,
                 ];
             });
 
@@ -137,12 +137,13 @@ class PartnersController extends Controller
             return response()->json(['message' => 'Partner profile not found'], 404);
         }
 
-        foreach ($request->services as $serviceData) {
-            $existingService = PartnerService::where('partner_id', $partnerProfile->user_id)
-                ->where('business_service_id', $serviceData['id'])
-                ->first();
+        $existingServices = PartnerService::where('partner_id', $partnerProfile->user_id)->get();
+        $serviceIdsFromRequest = collect($request->services)->pluck('id')->toArray();
 
-            // If the service doesn't exist, create it. Otherwise, update it.
+        foreach ($request->services as $serviceData) {
+            $existingService = $existingServices->where('business_service_id', $serviceData['id'])->first();
+
+            // If the services does not exist, create it. Otherwise, update it.
             if (!$existingService) {
                 PartnerService::create([
                     'partner_id' => $partnerProfile->user_id,
@@ -158,8 +159,16 @@ class PartnersController extends Controller
             }
         }
 
+        // Delete services that are not in the request
+        foreach ($existingServices as $existingService) {
+            if (!in_array($existingService->business_service_id, $serviceIdsFromRequest)) {
+                $existingService->delete();
+            }
+        }
+
         return response()->json(['message' => 'Services updated successfully'], 201);
     }
+
 
     public function addBusinessService(Request $request)
     {

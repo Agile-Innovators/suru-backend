@@ -41,5 +41,4 @@ Route::get('/partners/{category}', [PartnersController::class, 'getPartnersByCat
 Route::get('/partner/{user_id}', [PartnersController::class, 'getPartnerById']);
 Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
 Route::post('/partner-add-services/{user_id}', [PartnersController::class, 'addServicesToPartner']);
-Route::post('/partner-remove-services/{user_id}', [PartnersController::class, 'removeServicesFromPartner']);
 Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
