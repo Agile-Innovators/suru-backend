@@ -20,5 +20,7 @@ class UtilitiesSeeder extends Seeder
         Utility::create(['name' => 'Cable TV']);
         Utility::create(['name' => 'Green Area']);
         Utility::create(['name' => 'Allowed Pets']);
+        Utility::create(['name' => 'Electricity Access']);
+        Utility::create(['name' => 'Water Access']);
     }
 }
