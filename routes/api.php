@@ -27,6 +27,7 @@ Route::delete('/properties/delete/{id}',[PropertyController::class, 'destroy']);
 Route::get('/properties/property/{id}', [PropertyController::class, 'show']);
 Route::put('/properties/update/{id}', [PropertyController::class, 'update']);
 Route::get('/properties/user/{id}', [PropertyController::class, 'getUserProperties']);
+Route::get('/properties/filter', [PropertyController::class, 'filterProperty']);
 
 // Endpoints Locations Module
 Route::get('/locations', [LocationController::class, 'getAllLocations']);

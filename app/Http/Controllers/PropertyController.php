@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Property;
 use App\Models\PropertyImage;
+use App\Models\City;
 
 
 //Importar log y validator
@@ -324,5 +325,40 @@ class PropertyController extends Controller
     public function getUserProperties(string $id)
     {
         return response()->json(Property::where('user_id', $id)->get());
+    }
+
+    public function filterProperty(Request $request){
+       
+        $regionId = $request->query('regionId');
+        $minPrice = $request->query('minPrice');
+        $maxPrice = $request->query('maxPrice');
+        $propertyCategoryId = $request->query('propertyCategoryId');
+
+        if ($minPrice && $maxPrice && $minPrice > $maxPrice) {
+            return response()->json(['error' => 'El precio mínimo no puede ser mayor que el precio máximo'], 400);
+        }
+
+        $query = Property::query();
+        if($propertyCategoryId){
+            $query->where('property_category_id', $propertyCategoryId);
+        }
+
+        if($regionId){
+            //pluck() = obtiene un valor especifico o una lista de valores
+            $citiesId = City::where('region_id', $regionId)->pluck('id');
+            $query->whereIn('city_id', $citiesId);
+        }
+
+        if($minPrice){
+            $query->where('price', '>=', $minPrice);
+        }
+        if($maxPrice){
+            $query->where('price', '<=', $maxPrice);
+        }
+        
+
+        $properties = $query->get();
+
+        return response()->json($properties);  
     }
 }
