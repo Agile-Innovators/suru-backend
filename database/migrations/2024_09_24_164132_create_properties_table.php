@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 10, 2)->nullable();
+            $table->decimal('deposit_price', 10, 2)->nullable();
             $table->date('availability_date');
             $table->decimal('size_in_m2', 8, 2)->nullable();
             $table->integer('bedrooms')->nullable();
@@ -28,6 +29,7 @@ return new class extends Migration
             $table->foreignId('property_category_id')->constrained('property_categories')->onDelete('cascade');
             $table->foreignId('property_transaction_type_id')->constrained('property_transaction_types')->onDelete('cascade');
             $table->foreignId('city_id')->constrained('cities')->onDelete('cascade');
+            $table->foreignId('currency_id')->constrained('currencies')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
