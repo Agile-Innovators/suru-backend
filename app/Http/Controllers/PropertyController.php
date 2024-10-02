@@ -50,8 +50,9 @@ class PropertyController extends Controller
 
         foreach ($properties as $property) {
             $property->images = $property->propertyImages()->get();
-            $property->utilities = $property->utilities()->get();
         }
+        
+
         return response()->json($properties);
     }
 
@@ -66,7 +67,6 @@ class PropertyController extends Controller
     //test method
     public function store(Request $request)
     {
-        //sometimes> permite que el valor sea opcional
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
@@ -85,8 +85,6 @@ class PropertyController extends Controller
             'city_id' => 'required|exists:cities,id',
             'user_id' => 'required|exists:users,id',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',  
-            'utilities' => 'sometimes|array',  
-            'utilities.*' => 'integer|exists:utilities,id',  
         ]);
 
         if ($validator->fails()) {
@@ -118,12 +116,10 @@ class PropertyController extends Controller
                 'user_id' => $validateData['user_id'],
             ]);
 
-            
-            if (isset($validateData['utilities'])) {
-                $property->utilities()->attach($validateData['utilities']);
-            }
+            Log::debug('Contenido del request:', $request->all());
 
             if ($request->hasFile('images')) {
+                $imageCounter = 1; 
             
                 foreach ($request->file('images') as $image) {
 
@@ -140,9 +136,13 @@ class PropertyController extends Controller
                         'property_id' => $property->id,
                         'image_name' => $file_name,  
                     ]);
-
+            
+                    $imageCounter++;
                 }
+            }else{
+                Log::debug('No images found');
             }
+
             return response()->json([
                 'message' => 'Property created successfully',
                 'property' => $property,
@@ -188,8 +188,8 @@ class PropertyController extends Controller
         ->where('properties.id', $id)
         ->first();
 
+        //property.id where properties.id = regions.property.id
         $property->images = $property->propertyImages()->get();
-        $property->utilities = $property->utilities()->get();
 
         if (!$property) {
             return response()->json([
@@ -213,6 +213,7 @@ class PropertyController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // return response()->json($request->all());
 
         $validator = Validator::make($request->all(), [
             'title' => 'string',
@@ -234,8 +235,6 @@ class PropertyController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'existing_images_id' => 'array',
             'existing_images_id.*' => 'exists:property_images,id',
-            'utilities' => 'sometimes|array',  
-            'utilities.*' => 'integer|exists:utilities,id',  
         ]);
 
         if ($validator->fails()) {
@@ -264,9 +263,13 @@ class PropertyController extends Controller
 
         foreach ($imagesToDelete as $imageId) {
             $image = PropertyImage::findOrFail($imageId);
-
+            // return $image;
+            // return $image->image_name;
+            // Eliminar del almacenamiento
             Storage::disk('public')->delete('images/properties/' . $image->image_name);
+            // File::delete('storage/images/properties/' . $image->name);
     
+            // Eliminar de la base de datos
             $image->delete();
         }
 
@@ -278,6 +281,7 @@ class PropertyController extends Controller
         
                 $file_name = 'property' . $property->id . '_image' . uniqid() .  '.' . $extension;
         
+                // Save images in storage
                 $path = $image->storeAs('public/images/properties', $file_name); 
 
                 Log::debug('Image path: ' . $path. ' - File name: ' . $file_name);
@@ -287,11 +291,6 @@ class PropertyController extends Controller
                     'image_name' => $file_name,  
                 ]);
             }
-        }
-
-        if (isset($validatedData['utilities'])) {
-            // sync() = permite añadir nuevas utilidades y elimina las que no estan en el array
-            $property->utilities()->sync($validatedData['utilities']);
         }
 
         $property->update($validatedData);
@@ -313,28 +312,19 @@ class PropertyController extends Controller
         if (!$property) {
             return response()->json([
                 'message' => 'Property not found',
-            ], 404); 
+            ], 404); // Código de estado 404 Not Found
         }
 
         $property->delete();
 
         return response()->json([
             'message' => 'Property deleted successfully',
-        ], 200); 
+        ], 200); // Código de estado 200 OK
     }
 
     public function getUserProperties(string $id)
     {
-        $properties = Property::where('user_id', $id)->get();
-        
-
-        if ($properties->isEmpty()) {
-            return response()->json([
-                'message' => 'There are no properties'
-            ], 404);
-        }
-
-        return response()->json($properties);
+        return response()->json(Property::where('user_id', $id)->get());
     }
 
     public function filterProperty(Request $request){

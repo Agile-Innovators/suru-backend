@@ -223,6 +223,7 @@ class UserController extends Controller
             'operational_hours.*.day_of_week' => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'operational_hours.*.start_time' => 'required|date_format:H:i',
             'operational_hours.*.end_time' => 'required|date_format:H:i|after:operational_hours.*.start_time',
+            'operational_hours.*.is_closed' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -242,6 +243,7 @@ class UserController extends Controller
                     $existingOperationalHour->update([
                         'start_time' => $operationalHour['start_time'],
                         'end_time' => $operationalHour['end_time'],
+                        'is_closed' => $operationalHour['is_closed'],
                     ]);
                 } else {
                     UserOperationalHour::create([
@@ -249,6 +251,7 @@ class UserController extends Controller
                         'day_of_week' => $operationalHour['day_of_week'],
                         'start_time' => $operationalHour['start_time'],
                         'end_time' => $operationalHour['end_time'],
+                        'is_closed' => $operationalHour['is_closed'],
                     ]);
                 }
             }

@@ -19,6 +19,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Monday',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -26,6 +27,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Tuesday',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -33,6 +35,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Wednesday',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -40,6 +43,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Thursday',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -47,6 +51,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Friday',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -54,6 +59,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Saturday',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -61,6 +67,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Sunday',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'is_closed' => false,
         ]);
 
         // User Operational Hours
@@ -69,6 +76,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Monday',
             'start_time' => '08:00:00',
             'end_time' => '16:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -76,6 +84,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Tuesday',
             'start_time' => '08:00:00',
             'end_time' => '16:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -90,6 +99,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Thursday',
             'start_time' => '08:00:00',
             'end_time' => '16:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -97,6 +107,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Friday',
             'start_time' => '08:00:00',
             'end_time' => '16:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -104,6 +115,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Saturday',
             'start_time' => '08:00:00',
             'end_time' => '16:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -111,6 +123,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Sunday',
             'start_time' => '08:00:00',
             'end_time' => '16:00:00',
+            'is_closed' => false,
         ]);
 
         // Partner Operational Hours
@@ -119,6 +132,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Monday',
             'start_time' => '10:00:00',
             'end_time' => '18:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -126,6 +140,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Tuesday',
             'start_time' => '10:00:00',
             'end_time' => '18:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -133,6 +148,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Wednesday',
             'start_time' => '10:00:00',
             'end_time' => '18:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -140,6 +156,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Thursday',
             'start_time' => '10:00:00',
             'end_time' => '18:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -147,6 +164,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Friday',
             'start_time' => '10:00:00',
             'end_time' => '18:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -154,6 +172,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Saturday',
             'start_time' => '10:00:00',
             'end_time' => '18:00:00',
+            'is_closed' => false,
         ]);
 
         UserOperationalHour::create([
@@ -161,6 +180,7 @@ class UserOperationalHoursSeeder extends Seeder
             'day_of_week' => 'Sunday',
             'start_time' => '10:00:00',
             'end_time' => '18:00:00',
+            'is_closed' => false,
         ]);
 
     }

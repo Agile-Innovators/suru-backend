@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('day_of_week');
             $table->time('start_time');
             $table->time('end_time');
+            $table->boolean('is_closed')->default(false);
             $table->timestamps();
         });
     }
