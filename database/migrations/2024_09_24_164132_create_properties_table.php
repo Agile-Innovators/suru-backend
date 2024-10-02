@@ -29,6 +29,7 @@ return new class extends Migration
             $table->foreignId('property_category_id')->constrained('property_categories')->onDelete('cascade');
             $table->foreignId('property_transaction_type_id')->constrained('property_transaction_types')->onDelete('cascade');
             $table->foreignId('city_id')->constrained('cities')->onDelete('cascade');
+            $table->foreignId('currency_id')->constrained('currencies')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
