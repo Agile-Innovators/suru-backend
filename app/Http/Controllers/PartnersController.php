@@ -8,6 +8,7 @@ use App\Models\PartnerService;
 use App\Models\PartnerProfile;
 use App\Models\User;
 use App\Models\BusinessService;
+use App\Models\UserLocation;
 use Illuminate\Support\Facades\Validator;
 
 class PartnersController extends Controller
@@ -60,29 +61,45 @@ class PartnersController extends Controller
         return response()->json($partners);
     }
 
-    public function getPartnerById(string $id)
+    public function getPartnerById(string $user_id)
     {
-        $partner = PartnerProfile::select(
-            'partner_profiles.description',
-            'partner_profiles.website_url',
-            'partner_categories.name',
+        $partner = User::select(
             'users.name',
             'users.email',
             'users.phone_number',
-            'users.profile_picture as image',
-            'partner_categories.name as category'
+            'users.profile_picture',
+            'partner_profiles.description',
+            'partner_categories.name as category_name'
         )
-            ->join('users', 'partner_profiles.user_id', '=', 'users.id')
+            ->join('partner_profiles', 'users.id', '=', 'partner_profiles.user_id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
-            ->where('partner_profiles.id', $id)
+            ->where('users.id', $user_id)
             ->first();
 
         if (!$partner) {
             return response()->json(['message' => 'Partner not found'], 404);
         }
 
+        $locations = UserLocation::with('city.region.country')
+            ->where('user_id', $user_id)
+            ->get()
+            ->map(function ($userLocation) {
+                $city = $userLocation->city;
+                $region = $city->region;
+                $country = $region->country;
+                $locationName = "{$city->name}, {$region->name}. {$country->iso}";
+
+                return [
+                    'name' => $locationName,
+                    'value' => $city->id, 
+                ];
+            });
+
+        $partner->locations = $locations;
+
         return response()->json($partner);
     }
+
 
     public function getPartnerServices(string $id)
     {
@@ -133,7 +150,7 @@ class PartnersController extends Controller
                     'price' => $serviceData['price'],
                     'price_max' => $serviceData['price_max'],
                 ]);
-            }else{
+            } else {
                 $existingService->update([
                     'price' => $serviceData['price'],
                     'price_max' => $serviceData['price_max'],
