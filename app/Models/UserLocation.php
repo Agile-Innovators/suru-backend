@@ -10,7 +10,7 @@ class UserLocation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'partner_id',
+        'user_id',
         'city_id',
         'address',
     ];

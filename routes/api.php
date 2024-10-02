@@ -30,5 +30,6 @@ Route::get('/properties/user/{id}', [PropertyController::class, 'getUserProperti
 
 // Endpoints Locations Module
 Route::get('/locations', [LocationController::class, 'getAllLocations']);
+Route::post('/locations/associate-user', [LocationController::class, 'associateUserWithLocation']);
 
 // Endpoints Partners Module
