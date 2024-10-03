@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LocationController;
@@ -42,3 +43,6 @@ Route::get('/partner/{user_id}', [PartnersController::class, 'getPartnerById']);
 Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
 Route::post('/partner-update-services/{user_id}', [PartnersController::class, 'updatePartnerServices']);
 Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
+
+// Endpoints Utilities
+Route::get('/utilities', [UtilityController::class, 'index']);
