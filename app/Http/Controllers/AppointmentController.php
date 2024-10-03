@@ -53,6 +53,18 @@ class AppointmentController extends Controller
         return response()->json($appointment, 201);
     }
 
-    
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $appointment_id)
+    {
+        $appointment = Appointment::find($appointment_id);
+
+        if (!$appointment) {
+            return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        return response()->json($appointment);
+    }
 
 }
