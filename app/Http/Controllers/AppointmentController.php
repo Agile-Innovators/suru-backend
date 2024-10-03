@@ -67,4 +67,62 @@ class AppointmentController extends Controller
         return response()->json($appointment);
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $appointment_id)
+    {
+        $appointment = Appointment::find($appointment_id);
+
+        if (!$appointment) {
+            return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'owner_id' => 'exists:users,id',
+            'user_id' => 'exists:users,id',
+            'property_id' => 'exists:properties,id',
+            'scheduled_at' => 'date',
+            'message' => 'string|nullable',
+            'status' => 'string|in:Scheduled,Completed,Cancelled',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $appointment->update($request->all());
+
+        return response()->json([
+            'message' => 'Appointment updated succesfully',
+            'appointment' => $appointment,
+        ], 201);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $appointment_id)
+    {
+        $appointment = Appointment::find($appointment_id);
+
+        if (!$appointment) {
+            return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        $appointment->delete();
+
+        return response()->json(['message' => 'Appointment deleted successfully']);
+    }
+
+    
+
 }
