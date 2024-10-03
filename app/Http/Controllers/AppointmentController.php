@@ -123,6 +123,20 @@ class AppointmentController extends Controller
         return response()->json(['message' => 'Appointment deleted successfully']);
     }
 
+    /**
+     * Get all appointments related to a user.
+     */
+    public function userAppointments(string $user_id){
+        // Appointments in which the user_id or owner_id matches the user_id passed as parameter
+        $appointments = Appointment::where('user_id', $user_id)->orWhere('owner_id', $user_id)->get();
+
+        if($appointments->isEmpty()){
+            return response()->json(['message' => 'No appointments found'], 404);
+        }
+
+        return response()->json($appointments);
+    }
+
     
 
 }

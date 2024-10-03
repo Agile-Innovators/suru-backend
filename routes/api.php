@@ -50,3 +50,4 @@ Route::post('/appointment', [AppointmentController::class, 'store']);
 Route::get('/appointment/{appointment_id}', [AppointmentController::class, 'show']);
 Route::put('/appointment/{appointment_id}', [AppointmentController::class, 'update']);
 Route::delete('/appointment/{appointment_id}', [AppointmentController::class, 'destroy']);
+Route::get('/appointments/user/{user_id}', [AppointmentController::class, 'userAppointments']);
