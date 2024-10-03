@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Appointment;
+use App\Models\Property;
 use Illuminate\Support\Facades\Validator;
 
 class AppointmentController extends Controller
@@ -137,6 +138,23 @@ class AppointmentController extends Controller
         return response()->json($appointments);
     }
 
-    
+    /**
+     * Get all appointments related to a property.
+     */
+    public function propertyAppointments(string $property_id){
+        $appointments = Appointment::where('property_id', $property_id)->get();
+
+        $property = Property::find($property_id);
+
+        if(!$property){
+            return response()->json(['message' => 'Property not found'], 404);
+        }
+
+        if($appointments->isEmpty()){
+            return response()->json(['message' => 'No appointments found'], 404);
+        }
+
+        return response()->json($appointments);
+    }
 
 }
