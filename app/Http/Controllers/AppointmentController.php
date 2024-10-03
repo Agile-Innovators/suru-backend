@@ -157,4 +157,21 @@ class AppointmentController extends Controller
         return response()->json($appointments);
     }
 
+    
+    /**
+     * Get all user's appointments of an specific status.
+     */
+    public function getUserAppointmentsByStatus(string $user_id, string $status){
+        $appointments = Appointment::where(function($query) use ($user_id) {
+            $query->where('user_id', $user_id)
+              ->orWhere('owner_id', $user_id);
+        })->where('status', $status)->get();
+
+        if($appointments->isEmpty()){
+            return response()->json(['message' => 'No appointments found'], 404);
+        }
+
+        return response()->json($appointments);
+    }
+
 }
