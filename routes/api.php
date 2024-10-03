@@ -46,3 +46,4 @@ Route::post('/add-business-service', [PartnersController::class, 'addBusinessSer
 
 // Endpoints Appointments Module
 Route::get('/appointments', [AppointmentController::class, 'index']);
+Route::post('/appointment', [AppointmentController::class, 'store']);
