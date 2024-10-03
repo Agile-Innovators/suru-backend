@@ -18,6 +18,8 @@ class Appointment extends Model
         'status',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');

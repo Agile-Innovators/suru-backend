@@ -7,6 +7,7 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\PartnersController;
+use App\Http\Controllers\AppointmentController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -43,6 +44,16 @@ Route::get('/partner/{user_id}', [PartnersController::class, 'getPartnerById']);
 Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
 Route::post('/partner-update-services/{user_id}', [PartnersController::class, 'updatePartnerServices']);
 Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
+
+// Endpoints Appointments Module
+Route::get('/appointments', [AppointmentController::class, 'index']);
+Route::post('/appointment', [AppointmentController::class, 'store']);
+Route::get('/appointment/{appointment_id}', [AppointmentController::class, 'show']);
+Route::put('/appointment/{appointment_id}', [AppointmentController::class, 'update']);
+Route::delete('/appointment/{appointment_id}', [AppointmentController::class, 'destroy']);
+Route::get('/appointments/user/{user_id}', [AppointmentController::class, 'userAppointments']);
+Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
+Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
 
 // Endpoints Utilities
 Route::get('/utilities', [UtilityController::class, 'index']);
