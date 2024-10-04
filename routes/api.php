@@ -53,3 +53,4 @@ Route::delete('/appointment/{appointment_id}', [AppointmentController::class, 'd
 Route::get('/appointments/user/{user_id}', [AppointmentController::class, 'userAppointments']);
 Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
 Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
+Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
