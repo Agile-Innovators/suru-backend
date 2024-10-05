@@ -69,7 +69,7 @@ class PropertyController extends Controller
     //test method
     public function store(Request $request)
     {
-        //sometimes> permite que el valor sea opcional
+        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
@@ -136,13 +136,15 @@ class PropertyController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     // Upload the image to Cloudinary
-                    $uploadedImage = Cloudinary::upload($image->getRealPath(), [
+                    $uploadedImage = cloudinary()->upload($image->getRealPath(), [
                         'folder' => 'properties'
                     ]);
+                    
 
                     // Obtain the public_id of the uploaded image
                     $publicId = $uploadedImage->getPublicId();
 
+                    // Store the public_id in the database
                     PropertyImage::create([
                         'property_id' => $property->id,
                         'public_id' => $publicId,
@@ -161,6 +163,7 @@ class PropertyController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Display the specified resource.
@@ -443,7 +446,7 @@ class PropertyController extends Controller
             $property->images = $property->propertyImages()->get()->map(function ($image) {
                 return [
                     'public_id' => $image->public_id,
-                    'url' => Cloudinary::url($image->public_id), 
+                    'url' => Cloudinary::url($image->public_id),
                 ];
             });
 
