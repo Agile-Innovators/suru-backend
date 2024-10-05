@@ -39,6 +39,7 @@ class PropertyController extends Controller
             'cities.name as city',
             'regions.name as region',
             'currencies.code as currency_code',
+            'payment_frequencies.name as payment_frequency',
             'properties.user_id',
         )
             ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
@@ -46,6 +47,7 @@ class PropertyController extends Controller
             ->join('cities', 'cities.id', '=', 'properties.city_id')
             ->join('regions', 'regions.id', '=', 'cities.region_id')
             ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->get();
 
         foreach ($properties as $property) {
@@ -211,6 +213,7 @@ class PropertyController extends Controller
             'cities.name as city',
             'regions.name as region',
             'currencies.code as currency_code',
+            'payment_frequencies.name as payment_frequency',
             'properties.user_id',
         )
             ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
@@ -218,6 +221,7 @@ class PropertyController extends Controller
             ->join('cities', 'cities.id', '=', 'properties.city_id')
             ->join('regions', 'regions.id', '=', 'cities.region_id')
             ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->where('properties.id', $id)
             ->first();
 
@@ -380,6 +384,8 @@ class PropertyController extends Controller
             'properties.title',
             'properties.description',
             'properties.price',
+            'properties.rent_price',
+            'properties.deposit_price',
             'properties.availability_date',
             'properties.size_in_m2',
             'properties.bedrooms',
@@ -393,11 +399,13 @@ class PropertyController extends Controller
             'cities.name as city',
             'regions.name as region',
             'currencies.code as currency_code',
+            'payment_frequencies.name as payment_frequency',
         )
             ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
             ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
             ->join('cities', 'cities.id', '=', 'properties.city_id')
             ->join('regions', 'regions.id', '=', 'cities.region_id')
+            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
             ->where('user_id', $id)
             ->get();
@@ -430,6 +438,7 @@ class PropertyController extends Controller
             ->join('cities', 'cities.id', '=', 'properties.city_id')
             ->join('regions', 'regions.id', '=', 'cities.region_id')
             ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->select(
                 'properties.id',
                 'properties.title',
@@ -451,6 +460,7 @@ class PropertyController extends Controller
                 'cities.name as city',
                 'regions.name as region',
                 'currencies.code as currency_code',
+                'payment_frequencies.name as payment_frequency',
                 'properties.user_id',
             );
 
