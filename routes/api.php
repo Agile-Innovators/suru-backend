@@ -8,6 +8,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\PartnersController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\PropertyCategoryController;
+use App\Http\Controllers\RegionController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -54,7 +56,13 @@ Route::delete('/appointment/{appointment_id}', [AppointmentController::class, 'd
 Route::get('/appointments/user/{user_id}', [AppointmentController::class, 'userAppointments']);
 Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
 Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
+Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
 
 // Endpoints Utilities
 Route::get('/utilities', [UtilityController::class, 'index']);
-Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
+
+//Endpoints PropertyCategories
+Route::get('/property-categories', [PropertyCategoryController::class, 'index']);
+
+// Endpoints Regions
+Route::get('/regions', [RegionController::class, 'index']);
