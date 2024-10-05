@@ -8,12 +8,13 @@ use App\Models\Property;
 use App\Models\PropertyImage;
 use App\Models\City;
 
-
 //Importar log y validator
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 class PropertyController extends Controller
 {
@@ -53,7 +54,6 @@ class PropertyController extends Controller
         foreach ($properties as $property) {
             $property->images = $property->propertyImages()->get();
         }
-
 
         return response()->json($properties);
     }
@@ -134,21 +134,19 @@ class PropertyController extends Controller
             }
 
             if ($request->hasFile('images')) {
-
                 foreach ($request->file('images') as $image) {
+                    // Upload the image to Cloudinary
+                    $uploadedImage = Cloudinary::upload($image->getRealPath(), [
+                        'folder' => 'properties'
+                    ]);
 
-                    $extension = $image->getClientOriginalExtension();
-
-                    $file_name = 'property' . $property->id . '_image' . uniqid() . '.' . $extension;
-
-                    // Save images in storage
-                    $path = $image->storeAs('public/images/properties', $file_name);
+                    // Obtain the public_id of the uploaded image
+                    $publicId = $uploadedImage->getPublicId();
 
                     PropertyImage::create([
                         'property_id' => $property->id,
-                        'image_name' => $file_name,
+                        'public_id' => $publicId,
                     ]);
-
                 }
             }
 
@@ -156,7 +154,6 @@ class PropertyController extends Controller
                 'message' => 'Property created successfully',
                 'property' => $property,
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Error creating property',
@@ -199,16 +196,22 @@ class PropertyController extends Controller
             ->where('properties.id', $id)
             ->first();
 
-        $property->images = $property->propertyImages()->get();
-        $property->utilities = $property->utilities()->get();
-
         if (!$property) {
             return response()->json([
                 'message' => 'Property not found'
             ], 404);
         }
 
-        return response()->json($property);
+        $property->utilities = $property->utilities()->get();
+
+        $propertyImages = $property->propertyImages->map(function ($image) {
+            return Cloudinary::getUrl($image->public_id);
+        });
+
+        return response()->json([
+            'property' => $property,
+            'images' => $propertyImages,
+        ]);
     }
 
     /**
@@ -267,36 +270,28 @@ class PropertyController extends Controller
             ], 404);
         }
 
+        // Delete unused images
         $existingImages = $property->propertyImages->pluck('id')->toArray();
-
         $imagesToKeep = $request->input('existing_images_id', []);
-
-        //array_diff() devuelve los valores que estan presentes en el primer array pero no los que estan en el segundo
         $imagesToDelete = array_diff($existingImages, $imagesToKeep);
 
         foreach ($imagesToDelete as $imageId) {
             $image = PropertyImage::findOrFail($imageId);
-
-            Storage::disk('public')->delete('images/properties/' . $image->image_name);
-
+            Cloudinary::destroy($image->public_id); // Deleting images through its public_id
             $image->delete();
         }
 
-
+        // Upload new images
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-
-                $extension = $image->getClientOriginalExtension();
-
-                $file_name = 'property' . $property->id . '_image' . uniqid() . '.' . $extension;
-
-                $path = $image->storeAs('public/images/properties', $file_name);
-
-                Log::debug('Image path: ' . $path . ' - File name: ' . $file_name);
+                $uploadedImage = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'properties'
+                ]);
+                $publicId = $uploadedImage->getPublicId();
 
                 PropertyImage::create([
                     'property_id' => $property->id,
-                    'image_name' => $file_name,
+                    'public_id' => $publicId,
                 ]);
             }
         }
@@ -326,6 +321,14 @@ class PropertyController extends Controller
             return response()->json([
                 'message' => 'Property not found',
             ], 404);
+        }
+
+        $propertyImages = $property->propertyImages;
+
+        // Delete images from Cloudinary and database
+        foreach ($propertyImages as $propertyImage) {
+            Cloudinary::destroy($propertyImage->public_id);
+            $propertyImage->delete();
         }
 
         $property->delete();
@@ -433,11 +436,18 @@ class PropertyController extends Controller
         }
 
 
-
         $properties = $query->get();
 
         foreach ($properties as $property) {
-            $property->images = $property->propertyImages()->get();
+            // Obtain property images and generate their cloudinary URLs
+            $property->images = $property->propertyImages()->get()->map(function ($image) {
+                return [
+                    'public_id' => $image->public_id,
+                    'url' => Cloudinary::url($image->public_id), 
+                ];
+            });
+
+            // Obtain property utilities
             $property->utilities = $property->utilities()->get();
         }
 
