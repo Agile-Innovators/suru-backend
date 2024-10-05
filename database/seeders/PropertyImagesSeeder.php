@@ -15,11 +15,13 @@ class PropertyImagesSeeder extends Seeder
     {
         PropertyImage::create([
             'property_id' => 1, 
+            'url' => 'https://via.placeholder.com/150',
             'public_id' => 'property1_image1'
         ]);
 
         PropertyImage::create([
             'property_id' => 1,
+            'url' => 'https://via.placeholder.com/150',
             'public_id' => 'property1_image2'
         ]);
     }
