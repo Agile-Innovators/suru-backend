@@ -13,6 +13,7 @@ class Property extends Model
         'title',
         'description',
         'price',
+        'rent_price',
         'deposit_price',
         'availability_date',
         'size_in_m2',
@@ -26,6 +27,7 @@ class Property extends Model
         'property_category_id',
         'property_transaction_type_id',
         'city_id',
+        "payment_frequency_id",
         'currency_id',
         'user_id',
     ];

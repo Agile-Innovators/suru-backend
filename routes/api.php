@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LocationController;
@@ -53,4 +54,7 @@ Route::delete('/appointment/{appointment_id}', [AppointmentController::class, 'd
 Route::get('/appointments/user/{user_id}', [AppointmentController::class, 'userAppointments']);
 Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
 Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
+
+// Endpoints Utilities
+Route::get('/utilities', [UtilityController::class, 'index']);
 Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
