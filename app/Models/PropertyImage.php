@@ -11,7 +11,7 @@ class PropertyImage extends Model
 
     protected $fillable = [
         'property_id',
-        'image_name',
+        'public_id'
     ];
 
     protected $hidden = ['created_at', 'updated_at'];

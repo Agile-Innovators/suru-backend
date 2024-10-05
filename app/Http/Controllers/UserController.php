@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 //email provider
 use Resend\Laravel\Facades\Resend;
@@ -140,16 +141,15 @@ class UserController extends Controller
 
             // Updating profile picture and deleting old one if it's not the default one
             if ($request->hasFile('profile_picture')) {
-                $image_to_remove = 'public/images/users/' . $user->profile_picture;
-
-                if ($user->profile_picture != 'user_default.jpg' && Storage::exists($image_to_remove)) {
-                    Storage::delete($image_to_remove);
+                if ($user->profile_picture != 'user_default') {
+                    Cloudinary::destroy($user->profile_picture);
                 }
 
-                $image = $request->file('profile_picture');
-                $filename = 'user_' . $user->id . '.' . $image->getClientOriginalExtension();
-                $image->storeAs('public/images/users', $filename);
-                $user->update(['profile_picture' => $filename]);
+                $uploadedImage = Cloudinary::upload($request->profile_picture->getRealPath(), [
+                    'folder' => 'users'
+                ]);
+                
+                $user->update(['profile_picture' => $uploadedImage['public_id']]);
             }
 
             return response()->json([
