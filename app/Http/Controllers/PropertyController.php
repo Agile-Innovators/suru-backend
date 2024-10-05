@@ -11,6 +11,7 @@ use App\Models\City;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\DB;
 
 
 class PropertyController extends Controller
@@ -325,7 +326,7 @@ class PropertyController extends Controller
      */
     public function destroy(string $id)
     {
-        $property = Property::find($id);
+        $property = Property::with('propertyImages')->find($id);
 
         if (!$property) {
             return response()->json([
@@ -333,16 +334,14 @@ class PropertyController extends Controller
             ], 404);
         }
 
-        $propertyImages = $property->propertyImages;
+        try {
+            foreach ($property->propertyImages as $propertyImage) {
+                Cloudinary::destroy($propertyImage->public_id);
+                $propertyImage->delete();
+            }
 
-        // Delete images from Cloudinary and database
-        foreach ($propertyImages as $propertyImage) {
-            Cloudinary::destroy($propertyImage->public_id);
-            $propertyImage->delete();
-        }
-
-        try{
             $property->delete();
+
             return response()->json([
                 'message' => 'Property deleted successfully',
             ], 200);
@@ -352,8 +351,6 @@ class PropertyController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-
-        
     }
 
     public function getUserProperties(string $id)
