@@ -9,7 +9,6 @@ use App\Models\UserProfile;
 use App\Models\PartnerProfile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
@@ -148,7 +147,7 @@ class UserController extends Controller
                 $uploadedImage = Cloudinary::upload($request->profile_picture->getRealPath(), [
                     'folder' => 'users'
                 ]);
-                
+
                 $user->update(['profile_picture' => $uploadedImage['public_id']]);
             }
 
@@ -171,6 +170,7 @@ class UserController extends Controller
     {
         //
     }
+
 
     public function updatePassword(Request $request, string $id)
     {
@@ -428,5 +428,4 @@ class UserController extends Controller
             'token' => $token
         ], 200);
     }
-    
 }
