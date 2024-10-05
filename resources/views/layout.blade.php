@@ -17,7 +17,7 @@
     </div>
     <div class="w-full ml-[20rem] p-5">
         @yield('content')
-        <h1>AAAAAA</h1>
+        <h1>Hola c:</h1>
     </div>
 </body>
 </html>

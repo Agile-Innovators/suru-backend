@@ -10,6 +10,7 @@ use App\Models\PartnerProfile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 
 //email provider
 use Resend\Laravel\Facades\Resend;
@@ -71,11 +72,11 @@ class UserController extends Controller
         Log::info('Request data!!!:', $request->all());
 
         $validator = Validator::make($request->all(), [
-           'username' => 'required|string|unique:users,username,' . $user->id, 
+            'username' => 'required|string|unique:users,username,' . $user->id,
             'email' => 'required|email|unique:users,email,' . $user->id,
             'name' => 'required|string',
             'phone_number' => 'required|string',
-            
+
             //Validations for regular users
             'lastname1' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
             'lastname2' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
@@ -140,11 +141,11 @@ class UserController extends Controller
             // Updating profile picture and deleting old one if it's not the default one
             if ($request->hasFile('profile_picture')) {
                 $image_to_remove = 'public/images/users/' . $user->profile_picture;
-                
+
                 if ($user->profile_picture != 'user_default.jpg' && Storage::exists($image_to_remove)) {
                     Storage::delete($image_to_remove);
                 }
-    
+
                 $image = $request->file('profile_picture');
                 $filename = 'user_' . $user->id . '.' . $image->getClientOriginalExtension();
                 $image->storeAs('public/images/users', $filename);
@@ -259,7 +260,6 @@ class UserController extends Controller
             return response()->json([
                 'message' => 'Operational hours updated successfully',
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error updating operational hours',
@@ -386,8 +386,6 @@ class UserController extends Controller
                 'user' => $user,
                 'token' => $token
             ], 201);
-
-            
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error creating user',
@@ -396,9 +394,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Login a user
-     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -415,7 +410,7 @@ class UserController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !password_verify($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Invalid credentials',
             ], 401);
@@ -425,8 +420,13 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'User logged in successfully',
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
             'token' => $token
         ], 200);
     }
+    
 }

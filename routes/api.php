@@ -57,3 +57,4 @@ Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentControlle
 
 // Endpoints Utilities
 Route::get('/utilities', [UtilityController::class, 'index']);
+Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
