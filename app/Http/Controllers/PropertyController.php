@@ -136,8 +136,11 @@ class PropertyController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     // Upload the image to Cloudinary
-                    $uploadedImage = cloudinary()->upload($image->getRealPath().['folder'=>'properties'])->getSecurePath();
-                    
+                    $uploadedImage = cloudinary()->upload($image->getRealPath(), [
+                        'folder' => 'properties'
+                    ])->getSecurePath();
+
+
                     // Obtain the public_id of the uploaded image
                     $publicId = $uploadedImage->getPublicId();
 
