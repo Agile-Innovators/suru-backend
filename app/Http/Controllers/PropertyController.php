@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Models\Property;
 use App\Models\PropertyImage;
 use App\Models\City;
@@ -148,14 +147,16 @@ class PropertyController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     try {
-                        $uploadedImage = Cloudinary::upload($image->getRealPath(),
-                    ['folder' => 'properties']);
+                        $uploadedImage = Cloudinary::upload(
+                            $image->getRealPath(),
+                            ['folder' => 'properties']
+                        );
 
-        
+
                         if ($uploadedImage) {
                             $publicId = $uploadedImage->getPublicId();
                             $url = cloudinary()->getUrl($publicId);
-        
+
                             PropertyImage::create([
                                 'property_id' => $property->id,
                                 'url' => $url,
