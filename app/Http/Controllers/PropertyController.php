@@ -11,8 +11,6 @@ use App\Models\City;
 //Importar log y validator
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 
@@ -129,31 +127,39 @@ class PropertyController extends Controller
                 'user_id' => $validateData['user_id'],
             ]);
 
+            Log::info('Propiedad creada con éxito', ['property_id' => $property->id]);
+
             if (isset($validateData['utilities'])) {
                 $property->utilities()->attach($validateData['utilities']);
             }
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    // Upload the image to Cloudinary
-                    $uploadedImage = cloudinary()->upload($image->getRealPath(), [
-                        'folder' => 'properties'
-                    ])->getSecurePath();
+                    try {
+                        $uploadedImage = Cloudinary::upload($image->getRealPath(),
+                    ['folder' => 'properties']);
 
-
-                    // Obtain the public_id of the uploaded image
-                    $publicId = $uploadedImage->getPublicId();
-
-                    $url = cloudinary()->getUrl($publicId);
-
-                    // Store the public_id in the database
-                    PropertyImage::create([
-                        'property_id' => $property->id,
-                        'image_url' => $url,
-                        'public_id' => $publicId,
-                    ]);
+        
+                        if ($uploadedImage) {
+                            $publicId = $uploadedImage->getPublicId();
+                            $url = cloudinary()->getUrl($publicId);
+        
+                            PropertyImage::create([
+                                'property_id' => $property->id,
+                                'url' => $url,
+                                'public_id' => $publicId,
+                            ]);
+                        } else {
+                            Log::error('Error al subir imagen', ['image' => $image]);
+                            return response()->json(['message' => 'Error uploading image'], 422);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error al procesar imagen', ['error' => $e->getMessage()]);
+                        return response()->json(['error' => 'Error uploading image', 'message' => $e->getMessage()], 500);
+                    }
                 }
             }
+
 
             return response()->json([
                 'message' => 'Property created successfully',
