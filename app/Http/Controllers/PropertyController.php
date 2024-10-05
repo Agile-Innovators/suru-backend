@@ -102,6 +102,18 @@ class PropertyController extends Controller
 
         $validateData = $validator->validated();
 
+        if (in_array($validateData['property_category_id'], [4, 5])) {
+            
+            unset($validateData['pets_allowed']);
+            unset($validateData['green_area']);
+            
+            if (isset($validateData['utilities'])) {
+                $validateData['utilities'] = array_filter($validateData['utilities'], function($utilityId) {
+                    return $utilityId !== 3; 
+                });
+            }
+        }
+
         try {
             $property = Property::create([
                 'title' => $validateData['title'],
@@ -183,12 +195,15 @@ class PropertyController extends Controller
             'properties.title',
             'properties.description',
             'properties.price',
+            'properties.rent_price',
+            'properties.deposit_price',
             'properties.availability_date',
             'properties.size_in_m2',
             'properties.bedrooms',
             'properties.bathrooms',
             'properties.floors',
             'properties.pools',
+            'properties.garages',
             'properties.pets_allowed',
             'properties.green_area',
             'property_categories.name as property_category',
@@ -239,26 +254,27 @@ class PropertyController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'title' => 'string',
-            'description' => 'string',
-            'price' => 'numeric',
-            'availability_date' => 'date',
-            'size_in_m2' => 'numeric',
-            'bedrooms' => 'numeric',
-            'bathrooms' => 'numeric',
-            'floors' => 'numeric',
-            'garages' => 'numeric',
-            'pools' => 'numeric',
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'nullable|numeric',
+            'rent_price' => 'nullable|numeric',
+            'deposit_price' => 'nullable|numeric',
+            'availability_date' => 'required|date',
+            'size_in_m2' => 'required|numeric',
+            'bedrooms' => 'nullable|numeric',
+            'bathrooms' => 'nullable|numeric',
+            'floors' => 'nullable|numeric',
+            'garages' => 'nullable|numeric',
+            'pools' => 'nullable|numeric',
             'pets_allowed' => 'boolean',
             'green_area' => 'boolean',
-            'property_category_id' => 'exists:property_categories,id',
-            'property_transaction_type_id' => 'exists:property_transaction_types,id',
-            'city_id' => 'exists:cities,id',
-            'user_id' => 'exists:users,id',
-            'currency_id' => 'exists:currencies,id',
+            'property_category_id' => 'required|exists:property_categories,id',
+            'property_transaction_type_id' => 'required|exists:property_transaction_types,id',
+            'city_id' => 'required|exists:cities,id',
+            'payment_frequency_id' => 'nullable|exists:payment_frequencies,id',
+            'currency_id' => 'required|exists:currencies,id',
+            'user_id' => 'required|exists:users,id',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'existing_images_id' => 'array',
-            'existing_images_id.*' => 'exists:property_images,id',
             'utilities' => 'sometimes|array',
             'utilities.*' => 'integer|exists:utilities,id',
         ]);
@@ -419,6 +435,8 @@ class PropertyController extends Controller
                 'properties.title',
                 'properties.description',
                 'properties.price',
+                'properties.rent_price',
+                'properties.deposit_price',
                 'properties.availability_date',
                 'properties.size_in_m2',
                 'properties.bedrooms',
