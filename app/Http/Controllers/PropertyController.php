@@ -152,7 +152,6 @@ class PropertyController extends Controller
                             ['folder' => 'properties']
                         );
 
-
                         if ($uploadedImage) {
                             $publicId = $uploadedImage->getPublicId();
                             $url = cloudinary()->getUrl($publicId);
@@ -172,8 +171,6 @@ class PropertyController extends Controller
                     }
                 }
             }
-
-
             return response()->json([
                 'message' => 'Property created successfully',
                 'property' => $property,
@@ -360,11 +357,19 @@ class PropertyController extends Controller
             $propertyImage->delete();
         }
 
-        $property->delete();
+        try{
+            $property->delete();
+            return response()->json([
+                'message' => 'Property deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error deleting property',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
 
-        return response()->json([
-            'message' => 'Property deleted successfully',
-        ], 200);
+        
     }
 
     public function getUserProperties(string $id)
