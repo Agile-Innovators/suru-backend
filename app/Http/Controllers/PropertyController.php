@@ -25,6 +25,8 @@ class PropertyController extends Controller
             'properties.title',
             'properties.description',
             'properties.price',
+            'properties.rent_price',
+            'properties.deposit_price',
             'properties.availability_date',
             'properties.size_in_m2',
             'properties.bedrooms',
@@ -41,16 +43,24 @@ class PropertyController extends Controller
             'payment_frequencies.name as payment_frequency',
             'properties.user_id',
         )
-            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
-            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
-            ->join('cities', 'cities.id', '=', 'properties.city_id')
-            ->join('regions', 'regions.id', '=', 'cities.region_id')
-            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
-            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
+            ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
+            ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->orderBy('properties.id', 'desc')  
             ->get();
+            
 
         foreach ($properties as $property) {
             $property->images = $property->propertyImages()->get();
+        }
+
+        if($properties->isEmpty()){
+            return response()->json([
+                'message' => 'There are no properties'
+            ], 404);
         }
 
         return response()->json($properties);
@@ -138,8 +148,6 @@ class PropertyController extends Controller
                 'currency_id' => $validateData['currency_id'],
                 'user_id' => $validateData['user_id'],
             ]);
-
-            Log::info('Propiedad creada con éxito', ['property_id' => $property->id]);
 
             if (isset($validateData['utilities'])) {
                 $property->utilities()->attach($validateData['utilities']);
