@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
-
 class PropertyController extends Controller
 {
     /**
@@ -234,7 +233,7 @@ class PropertyController extends Controller
         $property->utilities = $property->utilities()->get();
 
         $propertyImages = $property->propertyImages->map(function ($image) {
-            return Cloudinary::getUrl($image->public_id);
+            return ['url'=>Cloudinary::getUrl($image->public_id), 'id'=> $image->id];
         });
 
         return response()->json([
@@ -323,6 +322,7 @@ class PropertyController extends Controller
 
                 PropertyImage::create([
                     'property_id' => $property->id,
+                    'url' => Cloudinary::getUrl($publicId),
                     'public_id' => $publicId,
                 ]);
             }
@@ -347,7 +347,7 @@ class PropertyController extends Controller
      */
     public function destroy(string $id)
     {
-        $property = Property::find($id);
+        $property = Property::with('propertyImages')->find($id);
 
         if (!$property) {
             return response()->json([
@@ -355,16 +355,14 @@ class PropertyController extends Controller
             ], 404);
         }
 
-        $propertyImages = $property->propertyImages;
+        try {
+            foreach ($property->propertyImages as $propertyImage) {
+                Cloudinary::destroy($propertyImage->public_id);
+                $propertyImage->delete();
+            }
 
-        // Delete images from Cloudinary and database
-        foreach ($propertyImages as $propertyImage) {
-            Cloudinary::destroy($propertyImage->public_id);
-            $propertyImage->delete();
-        }
-
-        try{
             $property->delete();
+
             return response()->json([
                 'message' => 'Property deleted successfully',
             ], 200);
@@ -374,8 +372,6 @@ class PropertyController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-
-        
     }
 
     public function getUserProperties(string $id)
