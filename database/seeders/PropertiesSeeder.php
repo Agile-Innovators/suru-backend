@@ -17,7 +17,8 @@ class PropertiesSeeder extends Seeder
             'title' => 'Beautiful House',
             'description' => 'A beautiful house in a nice neighborhood.',
             'price' => 250000,
-
+            'rent_price' => null, 
+            'deposit_price' => null,
             'availability_date' => '2024-10-01',
             'size_in_m2' => 150,
             'bedrooms' => 3,

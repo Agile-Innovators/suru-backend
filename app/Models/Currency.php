@@ -10,6 +10,7 @@ class Currency extends Model
     use HasFactory;
 
     protected $fillable = ['code','name'];
+    protected $hidden = ['created_at', 'updated_at'];
 
     public function Properties(){
         return $this->hasMany(Property::class);

@@ -38,8 +38,70 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $user = User::select(
+            'users.id',
+            'users.username',
+            'users.email',
+            'users.name',
+            'users.phone_number',
+            'users.image_url',
+            'users.image_public_id',
+            'users.user_type_id',
+            'user_types.name as user_type'
+        )
+            ->leftJoin('user_types', 'users.user_type_id', '=', 'user_types.id')
+            ->where('users.id', $id)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Obtainig profile information
+        if ($user->user_type_id == 2) { // Normal user
+            $userProfile = UserProfile::select(
+                'lastname1',
+                'lastname2'
+            )
+                ->where('user_id', $id)
+                ->first();
+
+            $user->profile = $userProfile;
+            
+        } elseif ($user->user_type_id == 3) { // Partner
+            $partnerProfile = PartnerProfile::select(
+                'description',
+                'website_url',
+                'partner_category_id',
+                'partner_categories.name as partner_category'
+            )
+                ->leftJoin('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
+                ->where('partner_profiles.user_id', $id)
+                ->first();
+
+            $user->profile = $partnerProfile;
+        }
+
+        // Obtaining operational hours except for the id and user_id
+        $operationalHours = UserOperationalHour::select(
+            'day_of_week',
+            'start_time',
+            'end_time',
+            'is_closed'
+        )
+            ->where('user_id', $id)
+            ->get();
+
+        $user->operational_hours = $operationalHours;
+
+        return response()->json(
+            $user,
+            200
+        );
     }
+
 
     /**
      * Show the form for editing the specified resource.
