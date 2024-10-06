@@ -228,7 +228,7 @@ class PropertyController extends Controller
             ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
             ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
             ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
-            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->where('properties.id', $id)
             ->first();
 

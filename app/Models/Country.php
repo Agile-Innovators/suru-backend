@@ -10,6 +10,7 @@ class Country extends Model
     use HasFactory;
 
     protected $fillable = ['name', 'iso', 'phone_code'];
+    protected $hidden = ['created_at', 'updated_at'];
 
     public function regions()
     {

@@ -10,6 +10,7 @@ class City extends Model
     use HasFactory;
 
     protected $fillable = ['name', 'region_id'];
+    protected $hidden = ['created_at', 'updated_at'];
 
     public function region()
     {
