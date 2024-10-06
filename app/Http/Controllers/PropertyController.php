@@ -223,12 +223,12 @@ class PropertyController extends Controller
             'payment_frequencies.name as payment_frequency',
             'properties.user_id',
         )
-            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
-            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
-            ->join('cities', 'cities.id', '=', 'properties.city_id')
-            ->join('regions', 'regions.id', '=', 'cities.region_id')
-            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
-            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
+            ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
+            ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->where('properties.id', $id)
             ->first();
 
