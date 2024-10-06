@@ -69,7 +69,6 @@ class UserController extends Controller
                 ->first();
 
             $user->profile = $userProfile;
-            
         } elseif ($user->user_type_id == 3) { // Partner
             $partnerProfile = PartnerProfile::select(
                 'description',
@@ -468,7 +467,7 @@ class UserController extends Controller
             ], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::with('userType')->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -484,6 +483,9 @@ class UserController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'username' => $user->username,
+                'user_type' => $user->userType->name,
+                'image_url' => $user->image_url,
             ],
             'token' => $token
         ], 200);
