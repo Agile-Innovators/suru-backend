@@ -49,15 +49,15 @@ class PropertyController extends Controller
             ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
             ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
             ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
-            ->orderBy('properties.id', 'desc')  
+            ->orderBy('properties.id', 'desc')
             ->get();
-            
+
 
         foreach ($properties as $property) {
             $property->images = $property->propertyImages()->get();
         }
 
-        if($properties->isEmpty()){
+        if ($properties->isEmpty()) {
             return response()->json([
                 'message' => 'There are no properties'
             ], 404);
@@ -389,7 +389,7 @@ class PropertyController extends Controller
     public function getUserProperties(string $id)
     {
 
-        $property = Property::select(
+        $properties = Property::select(
             'properties.id',
             'properties.title',
             'properties.description',
@@ -409,23 +409,24 @@ class PropertyController extends Controller
             'cities.name as city',
             'regions.name as region',
             'currencies.code as currency_code',
-            'payment_frequencies.name as payment_frequency',
+            'payment_frequencies.name as payment_frequency'
         )
-            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
-            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
-            ->join('cities', 'cities.id', '=', 'properties.city_id')
-            ->join('regions', 'regions.id', '=', 'cities.region_id')
-            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
-            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
-            ->where('user_id', $id)
+            ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
+            ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
+            ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->where('properties.user_id', $id)
+            ->orderBy('properties.id', 'desc')
             ->get();
 
-        if ($property->isEmpty()) {
+        if ($properties->isEmpty()) {
             return response()->json([
                 'message' => 'There are no properties'
             ], 404);
         }
-        return response()->json($property);
+        return response()->json($properties);
     }
 
     public function filterProperty(Request $request)
