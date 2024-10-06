@@ -437,19 +437,19 @@ class PropertyController extends Controller
         $maxPrice = $request->query('maxPrice');
         $propertyCategoryId = $request->query('propertyCategoryId');
 
-        if ($minPrice && $maxPrice && $minPrice > $maxPrice) {
+        if ($maxPrice !== "max" && $minPrice > $maxPrice) {
             return response()->json(['error' => 'El precio mínimo no puede ser mayor que el precio máximo'], 400);
         }
 
         // $query = Property::query();
 
         $query = Property::query()
-            ->join('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
-            ->join('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
-            ->join('cities', 'cities.id', '=', 'properties.city_id')
-            ->join('regions', 'regions.id', '=', 'cities.region_id')
-            ->join('currencies', 'currencies.id', '=', 'properties.currency_id')
-            ->join('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
+            ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
+            ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->select(
                 'properties.id',
                 'properties.title',
@@ -475,11 +475,14 @@ class PropertyController extends Controller
                 'properties.user_id',
             );
 
-        if ($propertyCategoryId) {
+            
+        //filtrar por categoria, si es 0 no seleccionar una en especifico
+        if ($propertyCategoryId != 0) {
             $query->where('property_category_id', $propertyCategoryId);
         }
 
-        if ($regionId) {
+        //filtrar por region, si es 0 no seleccionar una en especifico
+        if ($regionId != 0) {
             //pluck() = obtiene un valor especifico o una lista de valores
             $citiesId = City::where('region_id', $regionId)->pluck('id');
             $query->whereIn('city_id', $citiesId);
@@ -488,19 +491,21 @@ class PropertyController extends Controller
         if ($minPrice) {
             $query->where('price', '>=', $minPrice);
         }
-        if ($maxPrice) {
+        if ($maxPrice !== "max") {
             $query->where('price', '<=', $maxPrice);
         }
 
-
         $properties = $query->get();
+
+        // return response()->json($properties);
 
         foreach ($properties as $property) {
             // Obtain property images and generate their cloudinary URLs
             $property->images = $property->propertyImages()->get()->map(function ($image) {
                 return [
                     'public_id' => $image->public_id,
-                    'url' => Cloudinary::url($image->public_id),
+                    // 'url' => Cloudinary::url($image->public_id),
+                    'url' => Cloudinary::getUrl($image->public_id),
                 ];
             });
 
