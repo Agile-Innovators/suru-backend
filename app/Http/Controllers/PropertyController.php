@@ -279,6 +279,8 @@ class PropertyController extends Controller
             'currency_id' => 'required|exists:currencies,id',
             'user_id' => 'required|exists:users,id',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'existing_images_id' => 'array',
+            'existing_images_id.*' => 'exists:property_images,id',
             'utilities' => 'sometimes|array',
             'utilities.*' => 'integer|exists:utilities,id',
         ]);
