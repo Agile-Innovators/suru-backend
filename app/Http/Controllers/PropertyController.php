@@ -11,8 +11,6 @@ use App\Models\City;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-use Illuminate\Support\Facades\DB;
-
 
 class PropertyController extends Controller
 {
@@ -231,7 +229,7 @@ class PropertyController extends Controller
         $property->utilities = $property->utilities()->get();
 
         $propertyImages = $property->propertyImages->map(function ($image) {
-            return Cloudinary::getUrl($image->public_id);
+            return ['url'=>Cloudinary::getUrl($image->public_id), 'id'=> $image->id];
         });
 
         return response()->json([
@@ -318,6 +316,7 @@ class PropertyController extends Controller
 
                 PropertyImage::create([
                     'property_id' => $property->id,
+                    'url' => Cloudinary::getUrl($publicId),
                     'public_id' => $publicId,
                 ]);
             }
