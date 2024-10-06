@@ -104,13 +104,13 @@ class PropertyController extends Controller
         $validateData = $validator->validated();
 
         if (in_array($validateData['property_category_id'], [4, 5])) {
-            
+
             unset($validateData['pets_allowed']);
             unset($validateData['green_area']);
-            
+
             if (isset($validateData['utilities'])) {
-                $validateData['utilities'] = array_filter($validateData['utilities'], function($utilityId) {
-                    return $utilityId !== 3; 
+                $validateData['utilities'] = array_filter($validateData['utilities'], function ($utilityId) {
+                    return $utilityId !== 3;
                 });
             }
         }
@@ -232,13 +232,17 @@ class PropertyController extends Controller
 
         $property->utilities = $property->utilities()->get();
 
-        $propertyImages = $property->propertyImages->map(function ($image) {
-            return ['url'=>Cloudinary::getUrl($image->public_id), 'id'=> $image->id];
+        $property->images = $property->propertyImages->map(function ($image) {
+            return [
+                'url' => Cloudinary::getUrl($image->public_id),
+                'id' => $image->id
+            ];
         });
 
+        $property->makeHidden('propertyImages');
+
         return response()->json([
-            'property' => $property,
-            'images' => $propertyImages,
+            'property' => $property
         ]);
     }
 
