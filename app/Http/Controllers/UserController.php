@@ -34,14 +34,6 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(string $id)
@@ -139,16 +131,22 @@ class UserController extends Controller
             }
 
             // Updating profile picture and deleting old one if it's not the default one
-            if ($request->hasFile('profile_picture')) {
-                if ($user->profile_picture != 'user_default') {
-                    Cloudinary::destroy($user->profile_picture);
+            if ($request->hasFile('image')) {
+                if (($user->image_public_id != 'users/dc8aagfamyqwaspllhz8') && ($user->image_url != 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728158504/users/dc8aagfamyqwaspllhz8.jpg')) {
+                    Cloudinary::destroy($user->image_public_id);
                 }
 
-                $uploadedImage = Cloudinary::upload($request->profile_picture->getRealPath(), [
+                $uploadedImage = Cloudinary::upload($request->image->getRealPath(), [
                     'folder' => 'users'
                 ]);
 
-                $user->update(['profile_picture' => $uploadedImage['public_id']]);
+                if ($uploadedImage) {
+                    $publicId = $uploadedImage->getPublicId();
+                    $url = cloudinary()->getUrl($publicId);
+
+                    $user->update(['image_public_id' => $publicId]);
+                    $user->update(['image_url' => $url]);
+                }
             }
 
             return response()->json([
