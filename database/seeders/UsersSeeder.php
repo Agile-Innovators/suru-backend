@@ -18,7 +18,8 @@ class UsersSeeder extends Seeder
             'email' => 'admin@example.com',
             'password' => bcrypt('admin_password'), 
             'phone_number' => '1234567890',
-            'profile_picture' => 'default.jpg',
+            'image_url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728158504/users/dc8aagfamyqwaspllhz8.jpg',
+            'image_public_id' => 'users/dc8aagfamyqwaspllhz8',
             'user_type_id' => 1, // Admin
             'created_at' => now(),
         ]);
@@ -29,7 +30,8 @@ class UsersSeeder extends Seeder
             'email' => 'normaluser@example.com',
             'password' => bcrypt('user_password'), 
             'phone_number' => '0987654321',
-            'profile_picture' => 'default.jpg',
+            'image_url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728158504/users/dc8aagfamyqwaspllhz8.jpg',
+            'image_public_id' => 'users/dc8aagfamyqwaspllhz8',
             'user_type_id' => 2, // Normal
             'created_at' => now(),
         ]);
@@ -40,7 +42,8 @@ class UsersSeeder extends Seeder
             'email' => 'partneruser@example.com',
             'password' => bcrypt('partner_password'), 
             'phone_number' => '1122334455',
-            'profile_picture' => 'default.jpg',
+            'image_url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728158504/users/dc8aagfamyqwaspllhz8.jpg',
+            'image_public_id' => 'users/dc8aagfamyqwaspllhz8',
             'user_type_id' => 3, // Partner
             'created_at' => now(),
         ]);

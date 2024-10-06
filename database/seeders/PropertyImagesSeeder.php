@@ -15,14 +15,38 @@ class PropertyImagesSeeder extends Seeder
     {
         PropertyImage::create([
             'property_id' => 1, 
-            'url' => 'https://via.placeholder.com/150',
-            'public_id' => 'property1_image1'
+            'url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728179511/properties/gtjmc4yhy93a9841ho1d.jpg',
+            'public_id' => 'properties/gtjmc4yhy93a9841ho1d'
         ]);
 
         PropertyImage::create([
             'property_id' => 1,
-            'url' => 'https://via.placeholder.com/150',
-            'public_id' => 'property1_image2'
+            'url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728179511/properties/dgvlvqqzh5b2kz7ui1pb.jpg',
+            'public_id' => 'properties/dgvlvqqzh5b2kz7ui1pb'
+        ]);
+
+        PropertyImage::create([
+            'property_id' => 1,
+            'url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728179511/properties/ahomz3xt6uxj6rylivdi.jpg',
+            'public_id' => 'properties/ahomz3xt6uxj6rylivdi'
+        ]);
+
+        PropertyImage::create([
+            'property_id' => 1,
+            'url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728179511/properties/mlbadmmqdcyvz4faksh0.jpg',
+            'public_id' => 'properties/mlbadmmqdcyvz4faksh0'
+        ]);
+
+        PropertyImage::create([
+            'property_id' => 1,
+            'url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728179511/properties/uxouqw3enagqssu9zhen.jpg',
+            'public_id' => 'properties/uxouqw3enagqssu9zhen'
+        ]);
+
+        PropertyImage::create([
+            'property_id' => 1,
+            'url' => 'https://res.cloudinary.com/dvwtm566p/image/upload/v1728179511/properties/pmtalacmmu57d1b4t9md.jpg',
+            'public_id' => 'properties/pmtalacmmu57d1b4t9md'
         ]);
     }
 }

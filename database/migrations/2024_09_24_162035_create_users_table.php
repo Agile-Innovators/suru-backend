@@ -19,7 +19,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone_number')->nullable()->unique();
-            $table->string('profile_picture')->nullable();
+            $table->string('image_url')->nullable();
+            $table->string('image_public_id')->nullable();
             $table->rememberToken();
             $table->foreignId('user_type_id')->constrained('user_types')->onDelete('cascade');
             $table->timestamps();
