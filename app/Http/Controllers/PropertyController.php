@@ -334,7 +334,7 @@ class PropertyController extends Controller
 
                 PropertyImage::create([
                     'property_id' => $property->id,
-                    'url' => Cloudinary::getUrl($publicId),
+                    'url' => cloudinary()->getUrl($publicId),
                     'public_id' => $publicId,
                 ]);
             }
@@ -505,7 +505,7 @@ class PropertyController extends Controller
                 return [
                     'public_id' => $image->public_id,
                     // 'url' => Cloudinary::url($image->public_id),
-                    'url' => Cloudinary::getUrl($image->public_id),
+                    'url' => cloudinary()->getUrl($image->public_id),
                 ];
             });
 
