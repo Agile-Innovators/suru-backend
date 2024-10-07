@@ -368,7 +368,6 @@ class UserController extends Controller
     }
 
     //Authentication Module
-
     /**
      * Register a user
      */
@@ -378,6 +377,15 @@ class UserController extends Controller
             'username' => 'required|string|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'user_type_id' => 'required|integer|in:2,3', // 2 = Regular user, 3 = Partner
+
+            // Conditional validations
+            'lastname1' => $request->user_type_id == 2 ? 'required|string' : 'nullable',
+            'lastname2' => $request->user_type_id == 2 ? 'required|string' : 'nullable',
+            'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'phone_number' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'description' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'website_url' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -388,53 +396,58 @@ class UserController extends Controller
         }
 
         try {
-            $user = new User([
+            $user = User::create([
                 'username' => $request->username,
                 'email' => $request->email,
                 'password' => bcrypt($request->password),
                 'user_type_id' => $request->user_type_id,
-                'profile_picture' => 'default.jpg',
+                'name' => $request->user_type_id == 3 ? $request->name : null,
+                'phone_number' => $request->user_type_id == 3 ? $request->phone_number : null,
             ]);
 
-            $user->save();
-            $user_id = $user->id;
-
-            switch ($request->user_type_id) {
-                case 2:
-                    $userProfile = new UserProfile([
-                        'user_id' => $user_id,
-                    ]);
-                    $userProfile->save();
-                    break;
-
-                case 3:
-                    $partnerProfile = new PartnerProfile([
-                        'user_id' => $user_id,
-                        'description' => $request->description,
-                        'website_url' => $request->website_url,
-                        'partner_category_id' => $request->partner_category_id,
-                    ]);
-
-                    $partnerProfile->save();
-                    break;
-            }
-
-            // Creating user operational hours per default
-            $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            foreach ($days as $day) {
-                $userOperationalHour = new UserOperationalHour([
-                    'user_id' => $user_id,
-                    'day_of_week' => $day,
-                    'start_time' => '09:00:00',
-                    'end_time' => '17:00:00',
+            // Create profiles
+            if ($request->user_type_id == 2) {
+                UserProfile::create(['user_id' => $user->id]);
+            } else if ($request->user_type_id == 3) {
+                PartnerProfile::create([
+                    'user_id' => $user->id,
+                    'description' => $request->description,
+                    'website_url' => $request->website_url,
+                    'partner_category_id' => $request->partner_category_id,
                 ]);
-                $userOperationalHour->save();
+
+                // Upload an image if it exists
+                if ($request->hasFile('image')) {
+                    $uploadedImage = Cloudinary::upload($request->image->getRealPath(), ['folder' => 'users']);
+
+                    if ($uploadedImage) {
+                        $publicId = $uploadedImage->getPublicId();
+                        $user->update([
+                            'image_public_id' => $publicId,
+                            'image_url' => cloudinary()->getUrl($publicId),
+                        ]);
+                    }
+                }
             }
 
+            // Create default operational hours
+            $this->createUserOperationalHours($user->id);
+
+            $user->load('userType');
             $token = $user->createToken('Personal Access Token')->plainTextToken;
 
+            $userData = [
+                'id' => $user->id,
+                'username' => $user->username,
+                'name' => $user->name,
+                'email' => $user->email,
+                'image_url' => $user->image_url ?? "https://res.cloudinary.com/dvwtm566p/image/upload/v1728158504/users/dc8aagfamyqwaspllhz8.jpg",
+                'user_type' => $user->userType->name,
+            ];
+
+            // Welcome email
             // Resend::emails()->send([
-            //     'from' => env('MAIL_FROM_NAME'). ' <' . env('MAIL_FROM_ADDRESS') . '>',
+            //     'from' => env('MAIL_FROM_NAME') . ' <' . env('MAIL_FROM_ADDRESS') . '>',
             //     'to' => $user->email,
             //     'subject' => 'Welcome To Suru Test',
             //     'html' => (new Welcome($user->username))->render(),
@@ -442,7 +455,7 @@ class UserController extends Controller
 
             return response()->json([
                 'message' => 'User created successfully',
-                'user' => $user,
+                'user' => $userData,
                 'token' => $token
             ], 201);
         } catch (\Exception $e) {
@@ -450,6 +463,19 @@ class UserController extends Controller
                 'message' => 'Error creating user',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function createUserOperationalHours($userId)
+    {
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        foreach ($days as $day) {
+            UserOperationalHour::create([
+                'user_id' => $userId,
+                'day_of_week' => $day,
+                'start_time' => '09:00:00',
+                'end_time' => '17:00:00',
+            ]);
         }
     }
 
