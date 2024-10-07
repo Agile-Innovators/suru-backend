@@ -174,4 +174,20 @@ class AppointmentController extends Controller
         return response()->json($appointments);
     }
 
+    /**
+     * Cancell an specific appointment.
+     */
+    public function cancelAppointment(string $appointment_id){
+        $appointment = Appointment::find($appointment_id);
+
+        if(!$appointment){
+            return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        $appointment->status = 'Cancelled';
+        $appointment->save();
+
+        return response()->json(['message' => 'Appointment cancelled successfully']);
+    }
+
 }

@@ -58,6 +58,7 @@ Route::get('/appointments/user/{user_id}', [AppointmentController::class, 'userA
 Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
 Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
 Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
+Route::put('/appointment/cancel/{appointment_id}', [AppointmentController::class, 'cancelAppointment']);
 
 // Endpoints Utilities
 Route::get('/utilities', [UtilityController::class, 'index']);

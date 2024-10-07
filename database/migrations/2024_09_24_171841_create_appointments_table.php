@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('property_id')->constrained('properties')->onDelete('cascade');
             $table->timestamp('scheduled_at');
             $table->text('message')->nullable();
-            $table->enum('status', ['Scheduled', 'Completed', 'Cancelled'])->default('Scheduled');
+            $table->enum('status', ['Pending', 'Scheduled', 'Completed', 'Cancelled'])->default('Pending');
             $table->timestamps();
         });
     }
