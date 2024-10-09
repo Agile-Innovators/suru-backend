@@ -477,7 +477,7 @@ class PropertyController extends Controller
                 'properties.user_id',
             );
 
-            
+
         //filtrar por categoria, si es 0 no seleccionar una en especifico
         if ($propertyCategoryId != 0) {
             $query->where('property_category_id', $propertyCategoryId);

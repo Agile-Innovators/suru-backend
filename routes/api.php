@@ -10,14 +10,16 @@ use App\Http\Controllers\PartnersController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\PropertyCategoryController;
 use App\Http\Controllers\RegionController;
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+use App\Http\Controllers\AuthController;
 
 // Endpoints Authentication Module
-Route::post('/register', [UserController::class, 'register']);
-Route::post('/login', [UserController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::group(['middleware' => ['auth.jwt']], function () {
+    Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
+    Route::post('logout', [AuthController::class, 'logout']);
+});
 
 //Endpoints Users Module
 Route::put('/user/update/{id}', [UserController::class, 'update']);
@@ -44,7 +46,7 @@ Route::get('/partners-categories', [PartnersController::class, 'getPartnersCateg
 Route::get('/partners', [PartnersController::class, 'getAllPartners']);
 Route::get('/partners/{category}', [PartnersController::class, 'getPartnersByCategory']);
 Route::get('/partner/{user_id}', [PartnersController::class, 'getPartnerById']);
-Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
+// Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
 Route::post('/partner-update-services/{user_id}', [PartnersController::class, 'updatePartnerServices']);
 Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
 
