@@ -11,6 +11,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\PropertyCategoryController;
 use App\Http\Controllers\RegionController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PropertyTransactionTypeController;
 
 // Endpoints Authentication Module
 Route::post('/register', [AuthController::class, 'register']);
@@ -50,8 +51,6 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
     Route::put('/appointment/cancel/{appointment_id}', [AppointmentController::class, 'cancelAppointment']);
 });
-
-
 /**
  * Public routes: doesn't need authentication
  */
@@ -78,3 +77,8 @@ Route::get('/property-categories', [PropertyCategoryController::class, 'index'])
 
 // Endpoints Regions
 Route::get('/regions', [RegionController::class, 'index']);
+
+// Endpoints PropertyTransactionTypes
+Route::get('/property-transaction-types', [PropertyTransactionTypeController::class, 'index']);
+
+// Endpoints 
