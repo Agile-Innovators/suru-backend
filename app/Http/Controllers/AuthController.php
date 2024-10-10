@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Mail\Welcome;
 use App\Mail\Resend;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Services\UserService;
 
 //JWT
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -20,6 +21,13 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    protected $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     /**
      * Register a user
      */
@@ -32,8 +40,9 @@ class AuthController extends Controller
             'user_type_id' => 'required|integer|in:2,3', // 2 = Regular user, 3 = Partner
 
             // Conditional validations
-            'lastname1' => $request->user_type_id == 2 ? 'required|string' : 'nullable',
-            'lastname2' => $request->user_type_id == 2 ? 'required|string' : 'nullable',
+            'lastname1' => 'nullable',
+            'lastname2' => 'nullable',
+            
             'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
             'phone_number' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
             'description' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
@@ -83,7 +92,7 @@ class AuthController extends Controller
             }
 
             // Create default operational hours
-            $this->createUserOperationalHours($user->id);
+            $this->userService->createUserOperationalHours($user->id);
 
             $user->load('userType');
 
