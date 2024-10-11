@@ -438,6 +438,16 @@ class PropertyController extends Controller
         $minPrice = $request->query('minPrice');
         $maxPrice = $request->query('maxPrice');
         $propertyCategoryId = $request->query('propertyCategoryId');
+        $propertyTransactionId = $request->query('propertyTransactionId');
+        $qtyBedrooms = $request->query('qtyBedrooms');
+        $qtyBathrooms = $request->query('qtyBathrooms');
+        $qtyFloors = $request->query('qtyFloors');
+        $qtyPools = $request->query('qtyPools');
+        $qtyGarages = $request->query('qtyGarages');
+        $size = $request->query('size_in_m2');
+        $petsAllowed = $request->query('allow_pets');
+        $greenArea = $request->query('green_area');
+        $utilities = $request->query('utilities');
 
         if ($maxPrice !== "max" && $minPrice > $maxPrice) {
             return response()->json(['error' => 'El precio mínimo no puede ser mayor que el precio máximo'], 400);
@@ -483,6 +493,11 @@ class PropertyController extends Controller
             $query->where('property_category_id', $propertyCategoryId);
         }
 
+        //filtrar por transaccion, si es 0 no seleccionar una en especifico
+        if($propertyTransactionId != 0){
+            $query->where('property_transaction_type_id', $propertyTransactionId);
+        }
+
         //filtrar por region, si es 0 no seleccionar una en especifico
         if ($regionId != 0) {
             //pluck() = obtiene un valor especifico o una lista de valores
@@ -493,13 +508,51 @@ class PropertyController extends Controller
         if ($minPrice) {
             $query->where('price', '>=', $minPrice);
         }
+
         if ($maxPrice !== "max") {
             $query->where('price', '<=', $maxPrice);
         }
 
+        if($qtyBedrooms){
+            $query->where('bedrooms', '>=', $qtyBedrooms);
+        }
+
+        if($qtyBathrooms){
+            $query->where('bathrooms', '>=', $qtyBathrooms);
+        }
+
+        if($qtyFloors){
+            $query->where('floors', '>=', $qtyFloors);
+        }
+
+        if($qtyPools){
+            $query->where('pools', '>=', $qtyPools);
+        }
+    
+        if($qtyGarages){
+            $query->where('garages', '>=', $qtyGarages);
+        }
+
+        if($size){
+            $query->where('size_in_m2', '>=', $size);
+        }
+
+        if($petsAllowed){
+            $query->where('pets_allowed', $petsAllowed);
+        }
+
+        if($greenArea){
+            $query->where('green_area', $greenArea);
+        }
+
+        if ($utilities) {
+            $query->whereHas('utilities', function ($query) use ($utilities) {
+                $query->where('id', $utilities); // Filtra por IDs de utilidades.
+            });
+        }
+
         $properties = $query->get();
 
-        // return response()->json($properties);
 
         foreach ($properties as $property) {
             // Obtain property images and generate their cloudinary URLs
