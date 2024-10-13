@@ -433,11 +433,13 @@ class PropertyController extends Controller
 
     public function filterProperty(Request $request)
     {
+        
 
         $regionId = $request->query('regionId');
         $minPrice = $request->query('minPrice');
         $maxPrice = $request->query('maxPrice');
         $propertyCategoryId = $request->query('propertyCategoryId');
+        
         $propertyTransactionId = $request->query('propertyTransactionId');
         $qtyBedrooms = $request->query('qtyBedrooms');
         $qtyBathrooms = $request->query('qtyBathrooms');
@@ -491,7 +493,7 @@ class PropertyController extends Controller
         }
 
         //filtrar por transaccion, si es 0 no seleccionar una en especifico
-        if($propertyTransactionId != 3){
+        if(isset($propertyTransactionId) && $propertyTransactionId != 3){
             $query->where('property_transaction_type_id', $propertyTransactionId);
         }
 
@@ -546,16 +548,18 @@ class PropertyController extends Controller
         $properties = $query->get();
 
         //filtrar por utilidades
-        $properties = $properties->filter(function ($property) use ($utilities) {
-            // Obtener los IDs de las utilidades de la propiedad.
-            $propertyUtilitiesIds = $property->utilities()
-            ->select('utilities.id') 
-            ->pluck('utilities.id') 
-            ->toArray();
-        
-            // Verificar si todas las utilidades enviadas en la request están presentes en la propiedad.
-            return empty(array_diff($utilities, $propertyUtilitiesIds));
-        });
+        if(isset($utilities)){
+            $properties = $properties->filter(function ($property) use ($utilities) {
+                // Obtener los IDs de las utilidades de la propiedad.
+                $propertyUtilitiesIds = $property->utilities()
+                ->select('utilities.id') 
+                ->pluck('utilities.id') 
+                ->toArray();
+            
+                // Verificar si todas las utilidades enviadas en la request están presentes en la propiedad.
+                return empty(array_diff($utilities, $propertyUtilitiesIds));
+            });
+        }
 
         foreach ($properties as $property) {
             // Obtain property images and generate their cloudinary URLs
