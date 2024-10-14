@@ -52,6 +52,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
     Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
     Route::put('/appointment/accept/{appointment_id}', [AppointmentController::class, 'acceptAppointment']);
+    Route::put('/appointment/cancel/{appointment_id}', [AppointmentController::class, 'rejectAppointment']);
 });
 /**
  * Public routes: doesn't need authentication
