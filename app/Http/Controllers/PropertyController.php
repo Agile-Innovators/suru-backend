@@ -268,6 +268,7 @@ class PropertyController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
@@ -438,6 +439,7 @@ class PropertyController extends Controller
         $minPrice = $request->query('minPrice');
         $maxPrice = $request->query('maxPrice');
         $propertyCategoryId = $request->query('propertyCategoryId');
+
         $propertyTransactionId = $request->query('propertyTransactionId');
         $qtyBedrooms = $request->query('qtyBedrooms');
         $qtyBathrooms = $request->query('qtyBathrooms');
@@ -448,12 +450,11 @@ class PropertyController extends Controller
         $petsAllowed = $request->query('allow_pets');
         $greenArea = $request->query('green_area');
         $utilities = $request->query('utilities');
+        $currencyId = $request->query('currencyId');
 
         if ($maxPrice !== "max" && $minPrice > $maxPrice) {
             return response()->json(['error' => 'El precio mínimo no puede ser mayor que el precio máximo'], 400);
         }
-
-        // $query = Property::query();
 
         $query = Property::query()
             ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
@@ -487,14 +488,13 @@ class PropertyController extends Controller
                 'properties.user_id',
             );
 
-
         //filtrar por categoria, si es 0 no seleccionar una en especifico
         if ($propertyCategoryId != 0) {
             $query->where('property_category_id', $propertyCategoryId);
         }
 
         //filtrar por transaccion, si es 0 no seleccionar una en especifico
-        if($propertyTransactionId != 0){
+        if(isset($propertyTransactionId) && $propertyTransactionId != 3){
             $query->where('property_transaction_type_id', $propertyTransactionId);
         }
 
@@ -513,46 +513,81 @@ class PropertyController extends Controller
             $query->where('price', '<=', $maxPrice);
         }
 
+        if(isset($petsAllowed)){
+            // $query->where('pets_allowed', (bool) $petsAllowed);
+            $query->where(function ($q) use ($petsAllowed) {
+                $q->where('pets_allowed', $petsAllowed)
+                  ->orWhereNull('pets_allowed');
+            });
+        }
+
+        if(isset($greenArea)){
+            // $query->where('green_area', (bool) $greenArea);
+            $query->where(function ($q) use ($greenArea) {
+                $q->where('green_area', $greenArea)
+                  ->orWhereNull('green_area');
+            });
+        }
+
         if($qtyBedrooms){
-            $query->where('bedrooms', '>=', $qtyBedrooms);
+            // $query->where('bedrooms', '>=', $qtyBedrooms);
+            $query->where(function ($q) use ($qtyBedrooms) {
+                $q->where('bedrooms', '>=', $qtyBedrooms)
+                  ->orWhereNull('bedrooms');
+            });
         }
 
         if($qtyBathrooms){
-            $query->where('bathrooms', '>=', $qtyBathrooms);
+            // $query->where('bathrooms', '>=', $qtyBathrooms);
+            $query->where(function ($q) use ($qtyBathrooms) {
+                $q->where('bathrooms', '>=', $qtyBathrooms)
+                  ->orWhereNull('bathrooms');
+            });
         }
 
         if($qtyFloors){
-            $query->where('floors', '>=', $qtyFloors);
+            // $query->where('floors', '>=', $qtyFloors);
+            $query->where(function ($q) use ($qtyFloors) {
+                $q->where('floors', '>=', $qtyFloors)
+                  ->orWhereNull('floors');
+            });
         }
 
         if($qtyPools){
-            $query->where('pools', '>=', $qtyPools);
+            // $query->where('pools', '>=', $qtyPools);
+            $query->where(function ($q) use ($qtyPools) {
+                $q->where('pools', '>=', $qtyPools)
+                  ->orWhereNull('pools');
+            });
         }
     
         if($qtyGarages){
-            $query->where('garages', '>=', $qtyGarages);
+            // $query->where('garages', '>=', $qtyGarages);
+            $query->where(function ($q) use ($qtyGarages) {
+                $q->where('garages', '>=', $qtyGarages)
+                  ->orWhereNull('garages');
+            });
         }
 
         if($size){
             $query->where('size_in_m2', '>=', $size);
         }
 
-        if($petsAllowed){
-            $query->where('pets_allowed', $petsAllowed);
-        }
-
-        if($greenArea){
-            $query->where('green_area', $greenArea);
-        }
-
-        if ($utilities) {
-            $query->whereHas('utilities', function ($query) use ($utilities) {
-                $query->where('id', $utilities); // Filtra por IDs de utilidades.
-            });
-        }
-
         $properties = $query->get();
 
+        //filtrar por utilidades
+        if(isset($utilities) && count($utilities) > 0){
+            $properties = $properties->filter(function ($property) use ($utilities) {
+                // Obtener los IDs de las utilidades de la propiedad.
+                $propertyUtilitiesIds = $property->utilities()
+                ->select('utilities.id') 
+                ->pluck('utilities.id') 
+                ->toArray();
+            
+                // Verificar si todas las utilidades enviadas en la request están presentes en la propiedad.
+                return empty(array_diff($utilities, $propertyUtilitiesIds));
+            });
+        }
 
         foreach ($properties as $property) {
             // Obtain property images and generate their cloudinary URLs
@@ -564,8 +599,8 @@ class PropertyController extends Controller
                 ];
             });
 
-            // Obtain property utilities
             $property->utilities = $property->utilities()->get();
+ 
         }
 
         return response()->json($properties);
