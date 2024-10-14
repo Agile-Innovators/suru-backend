@@ -42,6 +42,8 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
 
     // Endpoints Appointments Module
+    Route::get('/appointments', [AppointmentController::class, 'index']);
+    Route::post('/appointment', [AppointmentController::class, 'store']);
     Route::get('/appointment/{appointment_id}', [AppointmentController::class, 'show']);
     Route::put('/appointment/{appointment_id}', [AppointmentController::class, 'update']);
     Route::delete('/appointment/{appointment_id}', [AppointmentController::class, 'destroy']);
@@ -49,7 +51,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
     Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
     Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
-    Route::put('/appointment/cancel/{appointment_id}', [AppointmentController::class, 'cancelAppointment']);
+    Route::put('/appointment/accept/{appointment_id}', [AppointmentController::class, 'acceptAppointment']);
 });
 /**
  * Public routes: doesn't need authentication

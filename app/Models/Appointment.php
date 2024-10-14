@@ -13,8 +13,9 @@ class Appointment extends Model
         'owner_id',
         'user_id',
         'property_id',
-        'scheduled_at',
-        'message',
+        'start_datetime',
+        'end_datetime',
+        'user_message',
         'status',
     ];
 

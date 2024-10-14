@@ -40,9 +40,9 @@ class AppointmentController extends Controller
             'owner_id' => 'required|exists:users,id',
             'user_id' => 'required|exists:users,id',
             'property_id' => 'required|exists:properties,id',
-            'scheduled_at' => 'required|date',
-            'message' => 'string|nullable',
-            'status' => 'string|in:Scheduled,Completed,Cancelled',
+            'start_datetime' => 'required|date',
+            'end_datetime' => 'required|date',
+            'user_message' => 'string|nullable'
         ]);
 
         if ($validator->fails()) {
@@ -50,6 +50,8 @@ class AppointmentController extends Controller
         }
 
         $appointment = Appointment::create($request->all());
+        $appointment->status = 'Pending';
+        $appointment->save();
 
         return response()->json($appointment, 201);
     }
@@ -91,9 +93,10 @@ class AppointmentController extends Controller
             'owner_id' => 'exists:users,id',
             'user_id' => 'exists:users,id',
             'property_id' => 'exists:properties,id',
-            'scheduled_at' => 'date',
-            'message' => 'string|nullable',
-            'status' => 'string|in:Scheduled,Completed,Cancelled',
+            'start_datetime' => 'date',
+            'end_datetime' => 'date',
+            'user_message' => 'string|nullable',
+            'status' => 'string|in:Pending,Scheduled,Completed,Cancelled,Rejected',
         ]);
 
         if ($validator->fails()) {
@@ -103,9 +106,9 @@ class AppointmentController extends Controller
         $appointment->update($request->all());
 
         return response()->json([
-            'message' => 'Appointment updated succesfully',
-            'appointment' => $appointment,
-        ], 201);
+            'message' => 'Appointment updated successfully',
+            'data' => $appointment,
+        ], 200);
     }
 
     /**
@@ -127,11 +130,13 @@ class AppointmentController extends Controller
     /**
      * Get all appointments related to a user.
      */
-    public function userAppointments(string $user_id){
-        // Appointments in which the user_id or owner_id matches the user_id passed as parameter
-        $appointments = Appointment::where('user_id', $user_id)->orWhere('owner_id', $user_id)->get();
+    public function userAppointments(string $user_id)
+    {
+        $appointments = Appointment::where('user_id', $user_id)
+            ->orWhere('owner_id', $user_id)
+            ->get();
 
-        if($appointments->isEmpty()){
+        if ($appointments->isEmpty()) {
             return response()->json(['message' => 'No appointments found'], 404);
         }
 
@@ -141,33 +146,36 @@ class AppointmentController extends Controller
     /**
      * Get all appointments related to a property.
      */
-    public function propertyAppointments(string $property_id){
-        $appointments = Appointment::where('property_id', $property_id)->get();
-
+    public function propertyAppointments(string $property_id)
+    {
         $property = Property::find($property_id);
 
-        if(!$property){
+        if (!$property) {
             return response()->json(['message' => 'Property not found'], 404);
         }
 
-        if($appointments->isEmpty()){
+        $appointments = Appointment::where('property_id', $property_id)->get();
+
+        if ($appointments->isEmpty()) {
             return response()->json(['message' => 'No appointments found'], 404);
         }
 
         return response()->json($appointments);
     }
 
-    
     /**
-     * Get all user's appointments of an specific status.
+     * Get all user's appointments of a specific status.
      */
-    public function getUserAppointmentsByStatus(string $user_id, string $status){
-        $appointments = Appointment::where(function($query) use ($user_id) {
+    public function getUserAppointmentsByStatus(string $user_id, string $status)
+    {
+        $appointments = Appointment::where(function ($query) use ($user_id) {
             $query->where('user_id', $user_id)
-              ->orWhere('owner_id', $user_id);
-        })->where('status', $status)->get();
+                ->orWhere('owner_id', $user_id);
+        })->where('status', $status)
+            ->orderBy('start_datetime', 'asc')
+            ->get();
 
-        if($appointments->isEmpty()){
+        if ($appointments->isEmpty()) {
             return response()->json(['message' => 'No appointments found'], 404);
         }
 
@@ -175,13 +183,19 @@ class AppointmentController extends Controller
     }
 
     /**
-     * Cancell an specific appointment.
+     * Cancel a specific appointment.
      */
-    public function cancelAppointment(string $appointment_id){
+    public function cancelAppointment(string $appointment_id)
+    {
         $appointment = Appointment::find($appointment_id);
 
-        if(!$appointment){
+        if (!$appointment) {
             return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        // Check current status before cancelling
+        if ($appointment->status === 'Cancelled') {
+            return response()->json(['message' => 'Appointment is already cancelled'], 400);
         }
 
         $appointment->status = 'Cancelled';
@@ -190,4 +204,56 @@ class AppointmentController extends Controller
         return response()->json(['message' => 'Appointment cancelled successfully']);
     }
 
+    /**
+     * Accept a specific appointment.
+     */
+    public function acceptAppointment(string $appointment_id)
+    {
+        $appointment = Appointment::find($appointment_id);
+
+        if (!$appointment) {
+            return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        // Check current status before accepting
+        if ($appointment->status !== 'Pending') {
+            return response()->json(['message' => 'Only pending appointments can be accepted'], 400);
+        }
+
+        // Verificar si hay citas aceptadas (Scheduled) en el mismo rango de tiempo y propiedad
+        $conflictingAppointment = Appointment::where('property_id', $appointment->property_id)
+            ->where('status', 'Scheduled')
+            ->where(function ($query) use ($appointment) {
+                $query->whereBetween('start_datetime', [$appointment->start_datetime, $appointment->end_datetime])
+                    ->orWhereBetween('end_datetime', [$appointment->start_datetime, $appointment->end_datetime])
+                    ->orWhere(function ($query) use ($appointment) {
+                        $query->where('start_datetime', '<=', $appointment->start_datetime)
+                            ->where('end_datetime', '>=', $appointment->end_datetime);
+                    });
+            })
+            ->first();
+
+        // Si existe una cita en conflicto, retornamos un mensaje de error
+        if ($conflictingAppointment) {
+            return response()->json(['message' => 'There is already a scheduled appointment in this time range.'], 409);
+        }
+
+        $appointment->status = 'Scheduled';
+        $appointment->save();
+
+        // Cancel other pending appointments in the same property that overlap with this schedule
+        Appointment::where('property_id', $appointment->property_id)
+            ->where('status', 'Pending')
+            ->where(function ($query) use ($appointment) {
+                $query->whereBetween('start_datetime', [$appointment->start_datetime, $appointment->end_datetime])
+                    ->orWhereBetween('end_datetime', [$appointment->start_datetime, $appointment->end_datetime])
+                    ->orWhere(function ($query) use ($appointment) {
+                        $query->where('start_datetime', '<=', $appointment->start_datetime)
+                            ->where('end_datetime', '>=', $appointment->end_datetime);
+                    });
+            })
+            ->update(['status' => 'Rejected']);
+
+        return response()->json(['message' => 'Appointment accepted successfully']);
+    }
 }
