@@ -12,6 +12,7 @@ use App\Http\Controllers\PropertyCategoryController;
 use App\Http\Controllers\RegionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PropertyTransactionTypeController;
+use App\Http\Controllers\FavoritesController;
 
 // Endpoints Authentication Module
 Route::post('/register', [AuthController::class, 'register']);
@@ -42,8 +43,6 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
 
     // Endpoints Appointments Module
-    Route::get('/appointments', [AppointmentController::class, 'index']);
-    Route::post('/appointment', [AppointmentController::class, 'store']);
     Route::get('/appointment/{appointment_id}', [AppointmentController::class, 'show']);
     Route::put('/appointment/{appointment_id}', [AppointmentController::class, 'update']);
     Route::delete('/appointment/{appointment_id}', [AppointmentController::class, 'destroy']);
@@ -51,8 +50,12 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
     Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
     Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
-    Route::put('/appointment/accept/{appointment_id}', [AppointmentController::class, 'acceptAppointment']);
     Route::put('/appointment/cancel/{appointment_id}', [AppointmentController::class, 'cancelAppointment']);
+
+    // Endpoints Favorites
+    Route::get('/user/{user_id}/favorites', [FavoritesController::class, 'getFavoritesUser']);
+    Route::Post('/user/favorites/add', [FavoritesController::class, 'addFavoriteProperty']);
+    Route::delete('/user/favorites/remove', [FavoritesController::class, 'removeFavoriteProperty']);
 });
 /**
  * Public routes: doesn't need authentication
@@ -84,4 +87,4 @@ Route::get('/regions', [RegionController::class, 'index']);
 // Endpoints PropertyTransactionTypes
 Route::get('/property-transaction-types', [PropertyTransactionTypeController::class, 'index']);
 
-// Endpoints 
+

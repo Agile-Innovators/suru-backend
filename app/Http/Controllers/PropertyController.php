@@ -269,7 +269,6 @@ class PropertyController extends Controller
     public function update(Request $request, string $id)
     {
         
-
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
