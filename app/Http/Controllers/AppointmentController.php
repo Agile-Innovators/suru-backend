@@ -207,7 +207,7 @@ class AppointmentController extends Controller
     /**
      * Accept a specific appointment.
      */
-    public function acceptAppointment(string $appointment_id)
+    public function acceptAppointment(string $appointment_id, int $user_id)
     {
         $appointment = Appointment::find($appointment_id);
 
@@ -220,28 +220,35 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Only pending appointments can be accepted'], 400);
         }
 
-        // Verificar si hay citas aceptadas (Scheduled) en el mismo rango de tiempo y propiedad
-        $conflictingAppointment = Appointment::where('property_id', $appointment->property_id)
-            ->where('status', 'Scheduled')
-            ->where(function ($query) use ($appointment) {
-                $query->whereBetween('start_datetime', [$appointment->start_datetime, $appointment->end_datetime])
-                    ->orWhereBetween('end_datetime', [$appointment->start_datetime, $appointment->end_datetime])
-                    ->orWhere(function ($query) use ($appointment) {
-                        $query->where('start_datetime', '<=', $appointment->start_datetime)
-                            ->where('end_datetime', '>=', $appointment->end_datetime);
-                    });
-            })
+        //Verify if there is a conflicting appointment in the same time range and property where the user is involved
+        $conflictingAppointment = Appointment::where(function ($query) use ($appointment, $user_id) {
+            $query->where('property_id', $appointment->property_id)
+                ->where('status', 'Scheduled')
+                ->where(function ($query) use ($appointment) {
+                    $query->whereBetween('start_datetime', [$appointment->start_datetime, $appointment->end_datetime])
+                        ->orWhereBetween('end_datetime', [$appointment->start_datetime, $appointment->end_datetime])
+                        ->orWhere(function ($query) use ($appointment) {
+                            $query->where('start_datetime', '<=', $appointment->start_datetime)
+                                ->where('end_datetime', '>=', $appointment->end_datetime);
+                        });
+                })
+                ->where(function ($query) use ($user_id) {
+                    $query->where('owner_id', $user_id)
+                        ->orWhere('user_id', $user_id);
+                });
+        })
             ->first();
 
-        // Si existe una cita en conflicto, retornamos un mensaje de error
+        // If there is a conflicting appointment, return an error
         if ($conflictingAppointment) {
-            return response()->json(['message' => 'There is already a scheduled appointment in this time range.'], 409);
+            return response()->json(['message' => 'There is already a scheduled appointment in this time range where you are involved.'], 409);
         }
 
+        // Accept the appointment
         $appointment->status = 'Scheduled';
         $appointment->save();
 
-        // Cancel other pending appointments in the same property that overlap with this schedule
+        // Cancelled all pending appointments in the same time range and property
         Appointment::where('property_id', $appointment->property_id)
             ->where('status', 'Pending')
             ->where(function ($query) use ($appointment) {
@@ -251,6 +258,10 @@ class AppointmentController extends Controller
                         $query->where('start_datetime', '<=', $appointment->start_datetime)
                             ->where('end_datetime', '>=', $appointment->end_datetime);
                     });
+            })
+            ->where(function ($query) use ($user_id) {
+                $query->where('owner_id', $user_id)
+                    ->orWhere('user_id', $user_id);
             })
             ->update(['status' => 'Rejected']);
 
