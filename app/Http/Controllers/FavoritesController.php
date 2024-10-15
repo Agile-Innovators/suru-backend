@@ -72,6 +72,15 @@ class FavoritesController extends Controller
         return response()->json($favorites);
     }
 
+    public function getFavoritesUserIds(string $userId){
+        $favoritesIds = Favorite::where('user_id', $userId)
+        ->with('property')
+        ->get()
+        ->pluck('property.id');
+
+        return response()->json($favoritesIds);
+    }
+
     public function addFavoriteProperty(Request $request){
 
         $userId = $request->input('user_id');
@@ -91,12 +100,18 @@ class FavoritesController extends Controller
         $userId = $request->input('user_id');
         $propertyId = $request->input('property_id');
 
-        Favorite::where('user_id', $userId)
+        $deleted = Favorite::where('user_id', $userId)
         ->where('property_id', $propertyId)
         ->delete();
 
-        return response()->json([
-            'message' => 'Propiedad eliminada de favoritos con éxito.'
-        ], 200); 
+        if ($deleted) {
+            return response()->json([
+                'message' => 'Propiedad eliminada de favoritos con éxito.'
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'No se encontró la propiedad en favoritos.'
+            ], 404); 
+        }
     }
 }

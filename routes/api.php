@@ -54,6 +54,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
 
     // Endpoints Favorites
     Route::get('/user/{user_id}/favorites', [FavoritesController::class, 'getFavoritesUser']);
+    Route::get('/user/{user_id}/favorites/ids', [FavoritesController::class, 'getFavoritesUserIds']);
     Route::Post('/user/favorites/add', [FavoritesController::class, 'addFavoriteProperty']);
     Route::delete('/user/favorites/remove', [FavoritesController::class, 'removeFavoriteProperty']);
 });
