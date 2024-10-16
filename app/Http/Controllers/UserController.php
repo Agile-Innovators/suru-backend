@@ -82,24 +82,30 @@ class UserController extends Controller
             $user->profile = $partnerProfile;
         }
 
-        // Obtaining operational hours except for the id and user_id
-        $operationalHours = UserOperationalHour::select(
-            'day_of_week',
-            'start_time',
-            'end_time',
-            'is_closed'
-        )
-            ->where('user_id', $id)
-            ->get();
-
-        $user->operational_hours = $operationalHours;
-
         return response()->json(
             $user,
             200
         );
     }
 
+    /**
+     * Show a user operational hours
+     */
+    public function showOperationalHours(string $id_user){
+        $operationalHours = UserOperationalHour::select(
+            'day_of_week',
+            'start_time',
+            'end_time',
+            'is_closed'
+        )
+            ->where('user_id', $id_user)
+            ->get();
+
+        return response()->json(
+            $operationalHours,
+            200
+        );
+    }
 
     /**
      * Show the form for editing the specified resource.
