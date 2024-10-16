@@ -66,12 +66,7 @@ class FavoritesController extends Controller
 
     public function getFavoritesUser(string $userId)
     {
-        // $favorites = Favorite::where('user_id', $userId)
-        //     ->with('property')
-        //     ->get()
-        //     ->pluck('property');
-
-
+ 
         $favoritesProperties = Property::select(
             'properties.id',
             'properties.title',
@@ -106,6 +101,18 @@ class FavoritesController extends Controller
             ->where('favorites.user_id', $userId)
             ->orderBy('properties.id', 'desc')
             ->get();
+
+            foreach ($favoritesProperties as $property) {
+                // Obtain property images and generate their cloudinary URLs
+                $property->images = $property->propertyImages()->get()->map(function ($image) {
+                    return [
+                        'public_id' => $image->public_id,
+                        // 'url' => Cloudinary::url($image->public_id),
+                        'url' => cloudinary()->getUrl($image->public_id),
+                    ];
+                });
+                $property->utilities = $property->utilities()->get();
+            }
 
         return response()->json($favoritesProperties);
     }

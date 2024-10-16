@@ -597,9 +597,7 @@ class PropertyController extends Controller
                     'url' => cloudinary()->getUrl($image->public_id),
                 ];
             });
-
             $property->utilities = $property->utilities()->get();
- 
         }
 
         return response()->json($properties);
