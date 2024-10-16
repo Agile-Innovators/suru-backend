@@ -269,7 +269,6 @@ class PropertyController extends Controller
     public function update(Request $request, string $id)
     {
         
-
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
@@ -598,9 +597,7 @@ class PropertyController extends Controller
                     'url' => cloudinary()->getUrl($image->public_id),
                 ];
             });
-
             $property->utilities = $property->utilities()->get();
- 
         }
 
         return response()->json($properties);
