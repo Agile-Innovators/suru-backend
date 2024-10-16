@@ -49,6 +49,32 @@ class AppointmentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $user_id = $request->user_id;
+
+        //Verify if there is a conflicting appointment in the same time range and property for the user
+        $conflictingAppointment = Appointment::where(function ($query) use ($request) {
+            $query->where('property_id', $request->property_id)
+                ->where('status', 'Scheduled')
+                ->where(function ($query) use ($request) {
+                    $query->whereBetween('start_datetime', [$request->start_datetime, $request->end_datetime])
+                        ->orWhereBetween('end_datetime', [$request->start_datetime, $request->end_datetime])
+                        ->orWhere(function ($query) use ($request) {
+                            $query->where('start_datetime', '<=', $request->start_datetime)
+                                ->where('end_datetime', '>=', $request->end_datetime);
+                        });
+                });
+        })
+            ->where(function ($query) use ($user_id) {
+                $query->where('owner_id', $user_id)
+                    ->orWhere('user_id', $user_id);
+            })
+            ->first();
+
+        // If there is a conflicting appointment, return an error
+        if ($conflictingAppointment) {
+            return response()->json(['message' => 'There is already a scheduled appointment in this time range where you are involved.'], 409);
+        }
+
         $appointment = Appointment::create($request->all());
         $appointment->status = 'Pending';
         $appointment->save();
