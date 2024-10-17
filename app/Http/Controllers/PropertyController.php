@@ -268,7 +268,7 @@ class PropertyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'required|string',
@@ -434,22 +434,44 @@ class PropertyController extends Controller
     public function filterProperty(Request $request)
     {
 
-        $regionId = $request->query('regionId');
-        $minPrice = $request->query('minPrice');
-        $maxPrice = $request->query('maxPrice');
-        $propertyCategoryId = $request->query('propertyCategoryId');
+        $USDtoCRC = 515;
+        $CRCtoUSD = 0.0019;
 
+        //attributes always present
+        $propertyCategoryId = $request->query('propertyCategoryId');
         $propertyTransactionId = $request->query('propertyTransactionId');
-        $qtyBedrooms = $request->query('qtyBedrooms');
-        $qtyBathrooms = $request->query('qtyBathrooms');
-        $qtyFloors = $request->query('qtyFloors');
-        $qtyPools = $request->query('qtyPools');
-        $qtyGarages = $request->query('qtyGarages');
+        $regionId = $request->query('regionId');
+        $currencyId = $request->query('currencyId');
         $size = $request->query('size_in_m2');
+
+        if ($propertyTransactionId == 1 || $propertyTransactionId == 3) { //sale and dual transaction
+            $minPrice = $request->query('minPrice');
+            $maxPrice = $request->query('maxPrice');
+        }
+
+        if ($propertyTransactionId == 2 || $propertyTransactionId == 3) { // rent and dual transaction
+            $depositPrice = $request->query('depositPrice');
+            $rentPrice = $request->query('rentPrice');
+            $frequencyId = $request->query('paymentFrequencyId');
+        }
+
+        //property categories (House, apartment, studio)
+        if ($propertyCategoryId == 1 || $propertyCategoryId == 2 || $propertyCategoryId == 5) {
+            $qtyBedrooms = $request->query('qtyBedrooms');
+            $qtyBathrooms = $request->query('qtyBathrooms');
+            $qtyFloors = $request->query('qtyFloors');
+            $qtyPools = $request->query('qtyPools');
+            $qtyGarages = $request->query('qtyGarages');
+        }
+
+        //property category retail space
+        if ($propertyCategoryId == 4) {
+            $qtyBathrooms = $request->query('qtyBathrooms');
+        }
+
         $petsAllowed = $request->query('allow_pets');
         $greenArea = $request->query('green_area');
         $utilities = $request->query('utilities');
-        $currencyId = $request->query('currencyId');
 
         if ($maxPrice !== "max" && $minPrice > $maxPrice) {
             return response()->json(['error' => 'El precio mínimo no puede ser mayor que el precio máximo'], 400);
@@ -493,7 +515,7 @@ class PropertyController extends Controller
         }
 
         //filtrar por transaccion, si es 0 no seleccionar una en especifico
-        if(isset($propertyTransactionId) && $propertyTransactionId != 3){
+        if (isset($propertyTransactionId) && $propertyTransactionId != 3) {
             $query->where('property_transaction_type_id', $propertyTransactionId);
         }
 
@@ -504,85 +526,136 @@ class PropertyController extends Controller
             $query->whereIn('city_id', $citiesId);
         }
 
-        if ($minPrice) {
-            $query->where('price', '>=', $minPrice);
-        }
+        // if (isset($minPrice)) {
+        //     $query->where('price', '>=', $minPrice);
+        // }
 
-        if ($maxPrice !== "max") {
-            $query->where('price', '<=', $maxPrice);
-        }
+        // if (isset($maxPrice) && $maxPrice !== "max") {
+        //     $query->where('price', '<=', $maxPrice);
+        // }
 
-        if(isset($petsAllowed)){
-            // $query->where('pets_allowed', (bool) $petsAllowed);
+        if (isset($petsAllowed)) {
             $query->where(function ($q) use ($petsAllowed) {
                 $q->where('pets_allowed', $petsAllowed)
-                  ->orWhereNull('pets_allowed');
+                    ->orWhereNull('pets_allowed');
             });
         }
 
-        if(isset($greenArea)){
-            // $query->where('green_area', (bool) $greenArea);
+        if (isset($greenArea)) {
             $query->where(function ($q) use ($greenArea) {
                 $q->where('green_area', $greenArea)
-                  ->orWhereNull('green_area');
+                    ->orWhereNull('green_area');
             });
         }
 
-        if($qtyBedrooms){
-            // $query->where('bedrooms', '>=', $qtyBedrooms);
+        if (isset($qtyBedrooms)) {
             $query->where(function ($q) use ($qtyBedrooms) {
                 $q->where('bedrooms', '>=', $qtyBedrooms)
-                  ->orWhereNull('bedrooms');
+                    ->orWhereNull('bedrooms');
             });
         }
 
-        if($qtyBathrooms){
-            // $query->where('bathrooms', '>=', $qtyBathrooms);
+        if (isset($qtyBathrooms)) {
             $query->where(function ($q) use ($qtyBathrooms) {
                 $q->where('bathrooms', '>=', $qtyBathrooms)
-                  ->orWhereNull('bathrooms');
+                    ->orWhereNull('bathrooms');
             });
         }
 
-        if($qtyFloors){
-            // $query->where('floors', '>=', $qtyFloors);
+        if (isset($qtyFloors)) {
             $query->where(function ($q) use ($qtyFloors) {
                 $q->where('floors', '>=', $qtyFloors)
-                  ->orWhereNull('floors');
+                    ->orWhereNull('floors');
             });
         }
 
-        if($qtyPools){
-            // $query->where('pools', '>=', $qtyPools);
+        if (isset($qtyPools)) {
             $query->where(function ($q) use ($qtyPools) {
                 $q->where('pools', '>=', $qtyPools)
-                  ->orWhereNull('pools');
-            });
-        }
-    
-        if($qtyGarages){
-            // $query->where('garages', '>=', $qtyGarages);
-            $query->where(function ($q) use ($qtyGarages) {
-                $q->where('garages', '>=', $qtyGarages)
-                  ->orWhereNull('garages');
+                    ->orWhereNull('pools');
             });
         }
 
-        if($size){
+        if (isset($qtyGarages)) {
+            $query->where(function ($q) use ($qtyGarages) {
+                $q->where('garages', '>=', $qtyGarages)
+                    ->orWhereNull('garages');
+            });
+        }
+
+        if (isset($size)) {
             $query->where('size_in_m2', '>=', $size);
         }
 
+        // if (isset($depositPrice)) {
+        //     $query->where('deposit_price', '>=', $depositPrice);
+        // }
+
+        // if (isset($rentPrice)) {
+        //     $query->where('rent_price', '>=', $rentPrice);
+        // }
+
+        // if (isset($frequencyId)) {
+        //     $query->where('payment_frequency_id', $frequencyId);
+        // }
+
+        // Filtrar por tipo de divisa
+        if (isset($currencyId)) {
+            $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $minPrice, $maxPrice, $depositPrice, $rentPrice) { // USD currency (filtrar en USD)
+                // Filtrar por rango de precios en USD, sin importar si la propiedad está en CRC
+                if (isset($minPrice)) {
+                    $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) >= ?", [$minPrice]);
+                }
+
+                if (isset($maxPrice) && $maxPrice !== "max") {
+                    $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) <= ?", [$maxPrice]);
+                }
+
+                // Filtrar por rent_price en USD
+                if (isset($rentPrice)) {
+                    $q->whereRaw("IF(properties.currency_id = 2, properties.rent_price * $CRCtoUSD, properties.rent_price) >= ?", [$rentPrice]);
+                }
+
+                // Filtrar por deposit_price en USD
+                if (isset($depositPrice)) {
+                    $q->whereRaw("IF(properties.currency_id = 2, properties.deposit_price * $CRCtoUSD, properties.deposit_price) >= ?", [$depositPrice]);
+                }
+
+            })->when($currencyId == 2, function ($q) use ($USDtoCRC, $minPrice, $maxPrice, $depositPrice, $rentPrice) { // CRC currency (filtrar en CRC)
+                // Filtrar por rango de precios en CRC, sin importar si la propiedad está en USD
+                if (isset($minPrice)) {
+                    $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) >= ?", [$minPrice]);
+                }
+
+                if (isset($maxPrice) && $maxPrice !== "max") {
+                    $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) <= ?", [$maxPrice]);
+                }
+
+                // Filtrar por rent_price en CRC
+                if (isset($rentPrice)) {
+                    $q->whereRaw("IF(properties.currency_id = 1, properties.rent_price * $USDtoCRC, properties.rent_price) >= ?", [$rentPrice]);
+                }
+
+                // Filtrar por deposit_price en CRC
+                if (isset($depositPrice)) {
+                    $q->whereRaw("IF(properties.currency_id = 1, properties.deposit_price * $USDtoCRC, properties.deposit_price) >= ?", [$depositPrice]);
+                }
+            });
+        }
+
+
+
         $properties = $query->get();
 
-        //filtrar por utilidades
-        if(isset($utilities) && count($utilities) > 0){
+        //filter by utilities
+        if (isset($utilities) && count($utilities) > 0) {
             $properties = $properties->filter(function ($property) use ($utilities) {
-                // Obtener los IDs de las utilidades de la propiedad.
+                // get ID´s utilities from property 
                 $propertyUtilitiesIds = $property->utilities()
-                ->select('utilities.id') 
-                ->pluck('utilities.id') 
-                ->toArray();
-            
+                    ->select('utilities.id')
+                    ->pluck('utilities.id')
+                    ->toArray();
+
                 // Verificar si todas las utilidades enviadas en la request están presentes en la propiedad.
                 return empty(array_diff($utilities, $propertyUtilitiesIds));
             });
