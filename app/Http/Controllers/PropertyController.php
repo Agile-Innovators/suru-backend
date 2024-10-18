@@ -433,9 +433,10 @@ class PropertyController extends Controller
 
     public function filterProperty(Request $request)
     {
-
         $USDtoCRC = 515;
         $CRCtoUSD = 0.0019;
+
+        // return "local";
 
         //attributes always present
         $propertyCategoryId = $request->query('propertyCategoryId');
@@ -444,16 +445,23 @@ class PropertyController extends Controller
         $currencyId = $request->query('currencyId');
         $size = $request->query('size_in_m2');
 
-        if ($propertyTransactionId == 1 || $propertyTransactionId == 3) { //sale and dual transaction
-            $minPrice = $request->query('minPrice');
-            $maxPrice = $request->query('maxPrice');
+        $minPrice = $request->query('minPrice');
+        $maxPrice = $request->query('maxPrice');
+
+        if (isset($propertyTransactionId)) {
+            // if ($propertyTransactionId == 1 || $propertyTransactionId == 3) { //sale and dual transaction
+            //     $minPrice = $request->query('minPrice');
+            //     $maxPrice = $request->query('maxPrice');
+            // }
+            // return "entro aqui";
+            if ($propertyTransactionId == 2 || $propertyTransactionId == 3) { // rent and dual transaction
+
+                $depositPrice = $request->query('depositPrice');
+                $rentPrice = $request->query('rentPrice');
+            }
         }
 
-        if ($propertyTransactionId == 2 || $propertyTransactionId == 3) { // rent and dual transaction
-            $depositPrice = $request->query('depositPrice');
-            $rentPrice = $request->query('rentPrice');
-            $frequencyId = $request->query('paymentFrequencyId');
-        }
+
 
         //property categories (House, apartment, studio)
         if ($propertyCategoryId == 1 || $propertyCategoryId == 2 || $propertyCategoryId == 5) {
@@ -587,63 +595,64 @@ class PropertyController extends Controller
             $query->where('size_in_m2', '>=', $size);
         }
 
-        // if (isset($depositPrice)) {
-        //     $query->where('deposit_price', '>=', $depositPrice);
-        // }
-
-        // if (isset($rentPrice)) {
-        //     $query->where('rent_price', '>=', $rentPrice);
-        // }
-
-        // if (isset($frequencyId)) {
-        //     $query->where('payment_frequency_id', $frequencyId);
-        // }
-
-        // Filtrar por tipo de divisa
+        //filter by currency
         if (isset($currencyId)) {
-            $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $minPrice, $maxPrice, $depositPrice, $rentPrice) { // USD currency (filtrar en USD)
-                // Filtrar por rango de precios en USD, sin importar si la propiedad está en CRC
-                if (isset($minPrice)) {
-                    $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) >= ?", [$minPrice]);
-                }
 
-                if (isset($maxPrice) && $maxPrice !== "max") {
-                    $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) <= ?", [$maxPrice]);
-                }
+            // verify if minPrice and maxPrice exists (property transaction SALE)
+            if (isset($minPrice) && isset($maxPrice)) {
 
-                // Filtrar por rent_price en USD
-                if (isset($rentPrice)) {
-                    $q->whereRaw("IF(properties.currency_id = 2, properties.rent_price * $CRCtoUSD, properties.rent_price) >= ?", [$rentPrice]);
-                }
+                // Filter by USD (currencyId = 1)
+                $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $minPrice, $maxPrice, $propertyTransactionId) {
 
-                // Filtrar por deposit_price en USD
-                if (isset($depositPrice)) {
-                    $q->whereRaw("IF(properties.currency_id = 2, properties.deposit_price * $CRCtoUSD, properties.deposit_price) >= ?", [$depositPrice]);
-                }
+                    // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
+                    if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
+                        $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) >= ?", [$minPrice]);
 
-            })->when($currencyId == 2, function ($q) use ($USDtoCRC, $minPrice, $maxPrice, $depositPrice, $rentPrice) { // CRC currency (filtrar en CRC)
-                // Filtrar por rango de precios en CRC, sin importar si la propiedad está en USD
-                if (isset($minPrice)) {
-                    $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) >= ?", [$minPrice]);
-                }
+                        if ($maxPrice !== "max") {
+                            $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) <= ?", [$maxPrice]);
+                        }
+                    }
+                });
 
-                if (isset($maxPrice) && $maxPrice !== "max") {
-                    $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) <= ?", [$maxPrice]);
-                }
+                // Filter by CRC (currencyId = 2)
+                $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $minPrice, $maxPrice, $propertyTransactionId) {
+                    // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
+                    if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
+                        $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) >= ?", [$minPrice]);
 
-                // Filtrar por rent_price en CRC
-                if (isset($rentPrice)) {
-                    $q->whereRaw("IF(properties.currency_id = 1, properties.rent_price * $USDtoCRC, properties.rent_price) >= ?", [$rentPrice]);
-                }
+                        if ($maxPrice !== "max") {
+                            $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) <= ?", [$maxPrice]);
+                        }
+                    }
+                });
+            }
 
-                // Filtrar por deposit_price en CRC
-                if (isset($depositPrice)) {
-                    $q->whereRaw("IF(properties.currency_id = 1, properties.deposit_price * $USDtoCRC, properties.deposit_price) >= ?", [$depositPrice]);
-                }
-            });
+            // verify if depositPrice and rentPrice exists (property transaction RENT)
+            if (isset($depositPrice) && isset($rentPrice)) {
+
+                // Filter by USD (currencyId = 1)
+                $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $depositPrice, $rentPrice, $propertyTransactionId) {
+
+                    // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
+                    if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
+                        $q->whereRaw("IF(properties.currency_id = 2, properties.rent_price * $CRCtoUSD, properties.rent_price) >= ?", [$rentPrice]);
+
+                        $q->whereRaw("IF(properties.currency_id = 2, properties.deposit_price * $CRCtoUSD, properties.deposit_price) >= ?", [$depositPrice]);
+                    }
+                });
+
+                // Filter by CRC (currencyId = 2)
+                $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $depositPrice, $rentPrice, $propertyTransactionId) {
+                    
+                    // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
+                    if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
+                        $q->whereRaw("IF(properties.currency_id = 1, properties.rent_price * $USDtoCRC, properties.rent_price) >= ?", [$rentPrice]);
+
+                        $q->whereRaw("IF(properties.currency_id = 1, properties.deposit_price * $USDtoCRC, properties.deposit_price) >= ?", [$depositPrice]);
+                    }
+                });
+            }
         }
-
-
 
         $properties = $query->get();
 
