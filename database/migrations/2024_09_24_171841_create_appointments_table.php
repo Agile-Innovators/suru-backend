@@ -16,8 +16,9 @@ return new class extends Migration
             $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('property_id')->constrained('properties')->onDelete('cascade');
-            $table->datetime('start_datetime'); 
-            $table->datetime('end_datetime');
+            $table->date('date');
+            $table->time('start_time'); 
+            $table->time('end_time');
             $table->text('user_message')->nullable();
             $table->enum('status', ['Pending', 'Scheduled', 'Completed', 'Cancelled', 'Rejected'])->default('Pending');
             $table->timestamps();

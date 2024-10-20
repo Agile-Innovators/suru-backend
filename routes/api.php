@@ -53,6 +53,9 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
     Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
     Route::put('/appointment/cancel/{appointment_id}', [AppointmentController::class, 'cancelAppointment']);
+    Route::put('/appointment/accept/{appointment_id}/{user_id}', [AppointmentController::class, 'acceptAppointment']);
+    Route::put('/appointment/reject/{appointment_id}/{user_id}', [AppointmentController::class, 'rejectAppointment']);
+    Route::post('/filter-appointments', [AppointmentController::class, 'filterAppointments']);
 
     // Endpoints Favorites
     Route::get('/user/{user_id}/favorites', [FavoritesController::class, 'getFavoritesUser']);
@@ -79,6 +82,9 @@ Route::get('/partners-categories', [PartnersController::class, 'getPartnersCateg
 Route::get('/partners', [PartnersController::class, 'getAllPartners']);
 Route::get('/partners/{category}', [PartnersController::class, 'getPartnersByCategory']);
 Route::get('/partner/{user_id}', [PartnersController::class, 'getPartnerById']);
+
+// Endpoints Appointments Module
+Route::get('/appointments', [AppointmentController::class, 'index']);
 
 // Endpoints Utilities
 Route::get('/utilities', [UtilityController::class, 'index']);
