@@ -256,6 +256,77 @@ class PropertyController extends Controller
     }
 
     /**
+     * Show 3 properties in the same city or region as the property with the given id
+     */
+    public function showRelatedProperties(string $property_id){
+        $property = Property::find($property_id);
+
+        if (!$property) {
+            return response()->json([
+                'message' => 'Property not found'
+            ], 404);
+
+        }
+
+        $relatedProperties = Property::select(
+            'properties.id',
+            'properties.title',
+            'properties.description',
+            'properties.price',
+            'properties.rent_price',
+            'properties.deposit_price',
+            'properties.availability_date',
+            'properties.size_in_m2',
+            'properties.bedrooms',
+            'properties.bathrooms',
+            'properties.floors',
+            'properties.garages',
+            'properties.pools',
+            'properties.pets_allowed',
+            'properties.green_area',
+            'property_categories.name as property_category',
+            'property_transaction_types.name as property_transaction',
+            'cities.name as city',
+            'regions.name as region',
+            'currencies.code as currency_code',
+            'payment_frequencies.name as payment_frequency',
+            'properties.user_id',
+        )
+            ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+            ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+            ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
+            ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
+            ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
+            ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->where('properties.id', '!=', $property_id)
+            ->where(function($query) use ($property_id){
+                $query->where('properties.city_id', Property::select('city_id')->where('id', $property_id))
+                    ->orWhere('cities.region_id', Property::select('region_id')->where('id', $property_id));
+            })
+            ->limit(3)
+            ->get();
+
+        // If there are less than 3 properties in the same city or region, add the current property to the response
+        if ($relatedProperties->count() < 3) {
+            $relatedProperties = $relatedProperties->merge([$property]);
+        }
+
+        // Obtain properties first image and add them to the response
+        foreach ($relatedProperties as $property) {
+            $property->image = $property->propertyImages()->first()->url;
+        }
+        
+        if ($relatedProperties->isEmpty()) {
+            return response()->json([
+                'message' => 'There are no related properties'
+            ], 404);
+        }
+
+        return response()->json($relatedProperties);
+    }
+    
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)

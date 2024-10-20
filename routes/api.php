@@ -60,6 +60,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::Post('/user/favorites/add', [FavoritesController::class, 'addFavoriteProperty']);
     Route::delete('/user/favorites/remove', [FavoritesController::class, 'removeFavoriteProperty']);
 });
+
 /**
  * Public routes: doesn't need authentication
  */
@@ -68,6 +69,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
 Route::get('/properties', [PropertyController::class, 'index']);
 Route::get('/properties/property/{id}', [PropertyController::class, 'show']);
 Route::get('/properties/filter', [PropertyController::class, 'filterProperty']);
+Route::get('/properties-related/{property_id}', [PropertyController::class, 'showRelatedProperties']);
 
 // Endpoints Locations Module
 Route::get('/locations', [LocationController::class, 'getAllLocations']);
