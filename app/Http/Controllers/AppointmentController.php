@@ -224,31 +224,60 @@ class AppointmentController extends Controller
      */
     public function getUserAppointmentsByStatus(string $user_id, string $status)
     {
+        // Obtener citas filtradas por usuario y estado
         $appointments = Appointment::where(function ($query) use ($user_id) {
             $query->where('user_id', $user_id)
                 ->orWhere('owner_id', $user_id);
-        })->where('status', $status)
+        })
+            ->where('status', $status)
             ->orderBy('date')
             ->orderBy('start_time')
-            ->with('property.city')
+            ->with('property.city') // Cargar la relación 'property' y 'city'
             ->get();
 
         if ($appointments->isEmpty()) {
             return response()->json(['message' => 'No appointments found'], 404);
         }
 
+        // Modificar la respuesta para incluir city_id de la propiedad
+        $appointments = $appointments->map(function ($appointment) {
+            return [
+                'id' => $appointment->id,
+                'owner_id' => $appointment->owner_id,
+                'user_id' => $appointment->user_id,
+                'property_id' => $appointment->property_id,
+                'date' => $appointment->date,
+                'start_time' => $appointment->start_time,
+                'end_time' => $appointment->end_time,
+                'user_message' => $appointment->user_message,
+                'status' => $appointment->status,
+                'property' => [
+                    'id' => $appointment->property->id,
+                    'title' => $appointment->property->title,
+                    'city_id' => $appointment->property->city_id,
+                    'city_name' => $appointment->property->city->name 
+                ]
+            ];
+        });
+
         return response()->json($appointments);
     }
+
+
 
     /**
      * Cancel a specific appointment.
      */
-    public function cancelAppointment(string $appointment_id)
+    public function cancelAppointment(string $appointment_id, int $user_id)
     {
         $appointment = Appointment::find($appointment_id);
 
         if (!$appointment) {
             return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        if (($appointment->owner_id !== $user_id) && ($appointment->user_id !== $user_id)) {
+            return response()->json(['message' => 'Only the owner or requester can cancell this appointment'], 403);
         }
 
         if ($appointment->status !== 'Scheduled') {
@@ -362,28 +391,33 @@ class AppointmentController extends Controller
         $end_time = $request->end_time;
 
         $appointments = Appointment::query()
-            // Filter by city if present, city_id = 0 means all cities
+            // Filtrar por ciudad si city_id es diferente de 0
             ->when($city_id != 0, function ($query) use ($city_id) {
                 $query->whereHas('property', function ($query) use ($city_id) {
                     $query->where('city_id', $city_id);
                 });
             })
-            // Filter by date if present
+            // Filtrar por fecha si se proporciona
             ->when($date, function ($query) use ($date) {
                 $query->whereDate('date', $date);
             })
-            // Filter by time range if both start_time and end_time are present
+            // Filtrar por rango de tiempo solo si start_time y end_time están presentes
             ->when($start_time && $end_time, function ($query) use ($start_time, $end_time) {
                 $query->where(function ($query) use ($start_time, $end_time) {
-                    // Appointments may start and end within the range
-                    $query->where(function ($query) use ($start_time, $end_time) {
-                        $query->whereTime('start_time', '>=', $start_time)
-                            ->whereTime('end_time', '<=', $end_time);
-                    })->orWhere(function ($query) use ($start_time, $end_time) {
-                        // Appointments may start before the range and end within the range
-                        $query->whereTime('start_time', '<', $end_time)
-                            ->whereTime('end_time', '>', $start_time);
-                    });
+                    // Aplicar las siguientes condiciones:
+
+                    // 1. El start_time debe ser mayor o igual al $request->start_time
+                    //    y menor al $request->end_time.
+                    $query->where(function ($q) use ($start_time, $end_time) {
+                        $q->whereTime('start_time', '>=', $start_time)
+                            ->whereTime('start_time', '<', $end_time);
+                    })
+                        // 2. El end_time debe ser menor o igual al $request->end_time
+                        //    y mayor al $request->start_time.
+                        ->orWhere(function ($q) use ($start_time, $end_time) {
+                            $q->whereTime('end_time', '<=', $end_time)
+                                ->whereTime('end_time', '>', $start_time);
+                        });
                 });
             })
             ->get();

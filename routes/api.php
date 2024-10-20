@@ -52,7 +52,8 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::get('/appointments/property/{property_id}', [AppointmentController::class, 'propertyAppointments']);
     Route::get('/appointments/user/{user_id}/status/{status}', [AppointmentController::class, 'getUserAppointmentsByStatus']);
     Route::get('/appointments/property/{property_id}/status/{status}', [AppointmentController::class, 'getPropertyAppointmentsByStatus']);
-    Route::put('/appointment/cancel/{appointment_id}', [AppointmentController::class, 'cancelAppointment']);
+    
+    Route::put('/appointment/cancel/{appointment_id}/{user_id}', [AppointmentController::class, 'cancelAppointment']);
     Route::put('/appointment/accept/{appointment_id}/{user_id}', [AppointmentController::class, 'acceptAppointment']);
     Route::put('/appointment/reject/{appointment_id}/{user_id}', [AppointmentController::class, 'rejectAppointment']);
     Route::post('/filter-appointments', [AppointmentController::class, 'filterAppointments']);
