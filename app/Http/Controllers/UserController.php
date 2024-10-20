@@ -91,7 +91,8 @@ class UserController extends Controller
     /**
      * Show a user operational hours
      */
-    public function showOperationalHours(string $id_user){
+    public function showOperationalHours(string $id_user)
+    {
         $operationalHours = UserOperationalHour::select(
             'day_of_week',
             'start_time',
@@ -135,11 +136,11 @@ class UserController extends Controller
             'name' => 'required|string',
             'phone_number' => 'required|string',
 
-            //Validations for regular users
+            // Validations for regular users
             'lastname1' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
             'lastname2' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
 
-            //Validations for partners
+            // Validations for partners
             'description' => $user->user_type_id == 3 ? 'required|string' : 'nullable',
             'website_url' => $user->user_type_id == 3 ? 'required|string' : 'nullable'
         ]);
@@ -212,12 +213,23 @@ class UserController extends Controller
 
                     $user->update(['image_public_id' => $publicId]);
                     $user->update(['image_url' => $url]);
+                    
                 }
             }
 
+            $userType = $user->userType->name;
+            $user->save();
+            
             return response()->json([
                 'message' => 'User updated successfully',
-                'user' => $user
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'username' => $user->username,
+                    'user_type' => $userType,
+                    'image_url' => $user->image_url,
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -226,6 +238,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Remove the specified resource from storage.
