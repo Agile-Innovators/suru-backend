@@ -537,8 +537,6 @@ class PropertyController extends Controller
             }
         }
 
-
-
         //property categories (House, apartment, studio)
         if ($propertyCategoryId == 1 || $propertyCategoryId == 2 || $propertyCategoryId == 5) {
             $qtyBedrooms = $request->query('qtyBedrooms');
@@ -598,7 +596,7 @@ class PropertyController extends Controller
             $query->where('property_category_id', $propertyCategoryId);
         }
 
-        //filtrar por transaccion, si es 0 no seleccionar una en especifico
+        //filtrar por transaccion, si es 3 no seleccionar una en especifico
         if (isset($propertyTransactionId) && $propertyTransactionId != 3) {
             $query->where('property_transaction_type_id', $propertyTransactionId);
         }
@@ -672,63 +670,143 @@ class PropertyController extends Controller
         }
 
         //filter by currency
+        // if (isset($currencyId)) {
+
+        //     // verify if minPrice and maxPrice exists (property transaction SALE)
+        //     if (isset($minPrice) && isset($maxPrice)) {
+
+        //         // Filter by USD (currencyId = 1)
+        //         $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $minPrice, $maxPrice, $propertyTransactionId) {
+
+        //             // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
+        //             if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
+        //                 $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) >= ?", [$minPrice]);
+
+        //                 if ($maxPrice !== "max") {
+        //                     $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) <= ?", [$maxPrice]);
+        //                 }
+        //             }
+        //         });
+
+        //         // Filter by CRC (currencyId = 2)
+        //         $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $minPrice, $maxPrice, $propertyTransactionId) {
+        //             // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
+        //             if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
+        //                 $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) >= ?", [$minPrice]);
+
+        //                 if ($maxPrice !== "max") {
+        //                     $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) <= ?", [$maxPrice]);
+        //                 }
+        //             }
+        //         });
+        //     }
+
+        //     // verify if depositPrice and rentPrice exists (property transaction RENT)
+        //     if (isset($depositPrice) && isset($rentPrice)) {
+
+        //         // Filter by USD (currencyId = 1)
+        //         $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $depositPrice, $rentPrice, $propertyTransactionId) {
+
+        //             // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
+        //             if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
+        //                 $q->whereRaw("IF(properties.currency_id = 2, properties.rent_price * $CRCtoUSD, properties.rent_price) >= ?", [$rentPrice]);
+
+        //                 $q->whereRaw("IF(properties.currency_id = 2, properties.deposit_price * $CRCtoUSD, properties.deposit_price) >= ?", [$depositPrice]);
+        //             }
+        //         });
+
+        //         // Filter by CRC (currencyId = 2)
+        //         $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $depositPrice, $rentPrice, $propertyTransactionId) {
+                    
+        //             // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
+        //             if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
+        //                 $q->whereRaw("IF(properties.currency_id = 1, properties.rent_price * $USDtoCRC, properties.rent_price) >= ?", [$rentPrice]);
+
+        //                 $q->whereRaw("IF(properties.currency_id = 1, properties.deposit_price * $USDtoCRC, properties.deposit_price) >= ?", [$depositPrice]);
+        //             }
+        //         });
+        //     }
+        // }
+
+
+
         if (isset($currencyId)) {
 
             // verify if minPrice and maxPrice exists (property transaction SALE)
             if (isset($minPrice) && isset($maxPrice)) {
-
+        
                 // Filter by USD (currencyId = 1)
                 $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $minPrice, $maxPrice, $propertyTransactionId) {
-
+        
                     // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
                     if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
-                        $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) >= ?", [$minPrice]);
-
+                        $q->whereRaw("
+                            IFNULL(IF(properties.currency_id = 2, properties.price * ?, properties.price), 0) >= ?
+                        ", [$CRCtoUSD, $minPrice]);
+        
                         if ($maxPrice !== "max") {
-                            $q->whereRaw("IF(properties.currency_id = 2, properties.price * $CRCtoUSD, properties.price) <= ?", [$maxPrice]);
+                            $q->whereRaw("
+                                IFNULL(IF(properties.currency_id = 2, properties.price * ?, properties.price), 0) <= ?
+                            ", [$CRCtoUSD, $maxPrice]);
                         }
                     }
                 });
-
+        
                 // Filter by CRC (currencyId = 2)
                 $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $minPrice, $maxPrice, $propertyTransactionId) {
                     // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
                     if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
-                        $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) >= ?", [$minPrice]);
-
+                        $q->whereRaw("
+                            IFNULL(IF(properties.currency_id = 1, properties.price * ?, properties.price), 0) >= ?
+                        ", [$USDtoCRC, $minPrice]);
+        
                         if ($maxPrice !== "max") {
-                            $q->whereRaw("IF(properties.currency_id = 1, properties.price * $USDtoCRC, properties.price) <= ?", [$maxPrice]);
+                            $q->whereRaw("
+                                IFNULL(IF(properties.currency_id = 1, properties.price * ?, properties.price), 0) <= ?
+                            ", [$USDtoCRC, $maxPrice]);
                         }
                     }
                 });
             }
-
+        
             // verify if depositPrice and rentPrice exists (property transaction RENT)
             if (isset($depositPrice) && isset($rentPrice)) {
-
+        
                 // Filter by USD (currencyId = 1)
                 $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $depositPrice, $rentPrice, $propertyTransactionId) {
-
+        
                     // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
                     if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
-                        $q->whereRaw("IF(properties.currency_id = 2, properties.rent_price * $CRCtoUSD, properties.rent_price) >= ?", [$rentPrice]);
-
-                        $q->whereRaw("IF(properties.currency_id = 2, properties.deposit_price * $CRCtoUSD, properties.deposit_price) >= ?", [$depositPrice]);
+                        $q->whereRaw("
+                            IFNULL(IF(properties.currency_id = 2, properties.rent_price * ?, properties.rent_price), 0) >= ?
+                        ", [$CRCtoUSD, $rentPrice]);
+        
+                        $q->whereRaw("
+                            IFNULL(IF(properties.currency_id = 2, properties.deposit_price * ?, properties.deposit_price), 0) >= ?
+                        ", [$CRCtoUSD, $depositPrice]);
                     }
                 });
-
+        
                 // Filter by CRC (currencyId = 2)
                 $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $depositPrice, $rentPrice, $propertyTransactionId) {
                     
                     // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
                     if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
-                        $q->whereRaw("IF(properties.currency_id = 1, properties.rent_price * $USDtoCRC, properties.rent_price) >= ?", [$rentPrice]);
-
-                        $q->whereRaw("IF(properties.currency_id = 1, properties.deposit_price * $USDtoCRC, properties.deposit_price) >= ?", [$depositPrice]);
+                        $q->whereRaw("
+                            IFNULL(IF(properties.currency_id = 1, properties.rent_price * ?, properties.rent_price), 0) >= ?
+                        ", [$USDtoCRC, $rentPrice]);
+        
+                        $q->whereRaw("
+                            IFNULL(IF(properties.currency_id = 1, properties.deposit_price * ?, properties.deposit_price), 0) >= ?
+                        ", [$USDtoCRC, $depositPrice]);
                     }
                 });
             }
         }
+        
+
+
+
 
         $properties = $query->get();
 
