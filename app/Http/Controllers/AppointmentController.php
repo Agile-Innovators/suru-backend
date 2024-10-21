@@ -239,7 +239,6 @@ class AppointmentController extends Controller
      */
     public function getUserAppointmentsByStatus(string $user_id, string $status)
     {
-        // Obtener citas filtradas por usuario y estado
         $appointments = Appointment::where(function ($query) use ($user_id) {
             $query->where('user_id', $user_id)
                 ->orWhere('owner_id', $user_id);
@@ -247,14 +246,14 @@ class AppointmentController extends Controller
             ->where('status', $status)
             ->orderBy('date')
             ->orderBy('start_time')
-            ->with('property.city') // Cargar la relación 'property' y 'city'
+            ->with('property.city') 
             ->get();
 
         if ($appointments->isEmpty()) {
             return response()->json(['message' => 'No appointments found'], 404);
         }
 
-        // Modificar la respuesta para incluir city_id de la propiedad
+        // Modify the response to include city_id of the property
         $appointments = $appointments->map(function ($appointment) {
             return [
                 'id' => $appointment->id,
