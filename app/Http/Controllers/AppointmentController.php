@@ -60,7 +60,6 @@ class AppointmentController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'owner_id' => 'required|exists:users,id',
             'user_id' => 'required|exists:users,id',
             'property_id' => 'required|exists:properties,id',
             'date' => 'required|date',
@@ -72,6 +71,16 @@ class AppointmentController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
+
+        // Obtain the property related to the appointment
+        $property = Property::find($request->property_id);
+
+        if (!$property) {
+            return response()->json(['message' => 'Property not found'], 404);
+        }
+
+        // Obtain the owner_id of the property
+        $owner_id = $property->user_id;
 
         // Verify if there is a conflicting appointment in the same time range and property where the user is involved
         $conflictingAppointment = Appointment::where('property_id', $request->property_id)
@@ -87,28 +96,34 @@ class AppointmentController extends Controller
                             });
                     });
             })
-            ->where(function ($query) use ($request) {
-                $query->where('owner_id', $request->owner_id)
+            ->where(function ($query) use ($owner_id, $request) {
+                $query->where('owner_id', $owner_id)
                     ->orWhere('user_id', $request->user_id);
             })
             ->first();
 
-        // If there is a conflicting appointment, return an error
+        // If there is a conflicting appointment, return a 409 Conflict response
         if ($conflictingAppointment) {
             return response()->json(['message' => 'There is already a scheduled appointment in this time range where you are involved.'], 409);
         }
 
-        $appointment = Appointment::create($request->all());
+        $appointmentData = $request->all();
+        $appointmentData['owner_id'] = $owner_id; // Add owner_id to the appointment data
+
+        $appointment = Appointment::create($appointmentData);
         $appointment->status = 'Pending';
 
+        // If user_message is null, set a default message
         if ($request->user_message == null) {
             $appointment->user_message = 'No extra comments were given';
+        } else {
+            $appointment->user_message = $request->user_message; 
         }
-
         $appointment->save();
 
         return response()->json($appointment, 201);
     }
+
 
     /**
      * Display the specified resource.
@@ -255,7 +270,7 @@ class AppointmentController extends Controller
                     'id' => $appointment->property->id,
                     'title' => $appointment->property->title,
                     'city_id' => $appointment->property->city_id,
-                    'city_name' => $appointment->property->city->name 
+                    'city_name' => $appointment->property->city->name
                 ]
             ];
         });
