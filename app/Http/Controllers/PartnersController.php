@@ -24,13 +24,13 @@ class PartnersController extends Controller
         return response()->json($categories);
     }
 
-    public function getAllPartners()
+    public function index()
     {
         $partners = PartnerProfile::select(
             'partner_profiles.description',
             'partner_categories.name as category_name',
             'users.name as partner_name',
-            'users.profile_picture as image'
+            'users.image_url as image'
         )
             ->join('users', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
@@ -51,23 +51,27 @@ class PartnersController extends Controller
             'partner_profiles.description',
             'partner_categories.name as category_name',
             'users.name as partner_name',
-            'users.profile_picture as image'
+            'users.image_url as image'
         )
             ->join('users', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
             ->where('partner_profiles.partner_category_id', $category_id)
             ->get();
 
+        if($partners->isEmpty()) {
+            return response()->json(['message' => 'No partners found for this category'], 404);
+        }
+
         return response()->json($partners);
     }
 
-    public function getPartnerById(string $user_id)
+    public function show(string $user_id)
     {
         $partner = User::select(
             'users.name',
             'users.email',
             'users.phone_number',
-            'users.profile_picture',
+            'users.image_url',
             'partner_profiles.description',
             'partner_categories.name as category_name'
         )
@@ -100,7 +104,6 @@ class PartnersController extends Controller
         return response()->json($partner);
     }
 
-
     public function getPartnerServices(string $user_id)
     {
         $partner = PartnerProfile::where('user_id', $user_id)->first();
@@ -122,7 +125,7 @@ class PartnersController extends Controller
         return response()->json($services);
     }
 
-    public function addServicesToPartner(Request $request, int $userId)
+    public function updatePartnerServices(Request $request, int $userId)
     {
         $request->validate([
             'services' => 'required|array',
@@ -134,7 +137,7 @@ class PartnersController extends Controller
         $partnerProfile = PartnerProfile::where('user_id', $userId)->first();
 
         if (!$partnerProfile) {
-            return response()->json(['message' => 'Partner profile not found'], 404);
+            return response()->json(['message' => 'Partner not found'], 404);
         }
 
         $existingServices = PartnerService::where('partner_id', $partnerProfile->user_id)->get();
@@ -165,10 +168,8 @@ class PartnersController extends Controller
                 $existingService->delete();
             }
         }
-
         return response()->json(['message' => 'Services updated successfully'], 201);
     }
-
 
     public function addBusinessService(Request $request)
     {

@@ -79,9 +79,9 @@ Route::get('/locations', [LocationController::class, 'getAllLocations']);
 
 // Endpoints Partners Module
 Route::get('/partners-categories', [PartnersController::class, 'getPartnersCategories']);
-Route::get('/partners', [PartnersController::class, 'getAllPartners']);
+Route::get('/partners', [PartnersController::class, 'index']);
 Route::get('/partners/{category}', [PartnersController::class, 'getPartnersByCategory']);
-Route::get('/partner/{user_id}', [PartnersController::class, 'getPartnerById']);
+Route::get('/partner/{user_id}', [PartnersController::class, 'show']);
 
 // Endpoints Appointments Module
 Route::get('/appointments', [AppointmentController::class, 'index']);
