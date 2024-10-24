@@ -59,6 +59,7 @@ class PropertyController extends Controller
 
         foreach ($properties as $property) {
             $property->images = $property->propertyImages()->get();
+            $property->utilities = $property->utilities()->get();
         }
 
         if ($properties->isEmpty()) {
