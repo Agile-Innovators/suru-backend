@@ -127,12 +127,16 @@ class PartnersController extends Controller
 
     public function updatePartnerServices(Request $request, int $userId)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'services' => 'required|array',
             'services.*.id' => 'required|exists:business_services,id',
             'services.*.price' => 'required|numeric',
             'services.*.price_max' => 'nullable|numeric',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
 
         $partnerProfile = PartnerProfile::where('user_id', $userId)->first();
 

@@ -40,7 +40,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
 
     // Endpoints Partners Module
     Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
-    Route::post('/partner-update-services/{user_id}', [PartnersController::class, 'updatePartnerServices']);
+    Route::put('/partner-update-services/{user_id}', [PartnersController::class, 'updatePartnerServices']);
     Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
 
     // Endpoints Appointments Module
