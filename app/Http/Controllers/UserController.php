@@ -89,26 +89,6 @@ class UserController extends Controller
     }
 
     /**
-     * Show a user operational hours
-     */
-    public function showOperationalHours(string $id_user)
-    {
-        $operationalHours = UserOperationalHour::select(
-            'day_of_week',
-            'start_time',
-            'end_time',
-            'is_closed'
-        )
-            ->where('user_id', $id_user)
-            ->get();
-
-        return response()->json(
-            $operationalHours,
-            200
-        );
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)

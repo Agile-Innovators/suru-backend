@@ -19,4 +19,19 @@ class UserService
             ]);
         }
     }
+
+    public function showOperationalHours(string $id_user)
+    {
+        $operationalHours = UserOperationalHour::select(
+            'day_of_week',
+            'start_time',
+            'end_time',
+            'is_closed'
+        )
+            ->where('user_id', $id_user)
+            ->get()
+            ->toArray();
+
+        return $operationalHours;
+    }
 }

@@ -10,9 +10,17 @@ use App\Models\User;
 use App\Models\BusinessService;
 use App\Models\UserLocation;
 use Illuminate\Support\Facades\Validator;
+use App\Services\UserService;
 
 class PartnersController extends Controller
 {
+    protected $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     public function getPartnersCategories()
     {
         $categories = PartnerCategory::select(
@@ -20,6 +28,10 @@ class PartnersController extends Controller
             'partner_categories.name'
         )
             ->get();
+
+        if($categories->isEmpty()) {
+            return response()->json(['message' => 'No categories found'], 404);
+        }
 
         return response()->json($categories);
     }
@@ -35,6 +47,10 @@ class PartnersController extends Controller
             ->join('users', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
             ->get();
+
+        if($partners->isEmpty()) {
+            return response()->json(['message' => 'No partners found'], 404);
+        }
 
         return response()->json($partners);
     }
@@ -92,14 +108,18 @@ class PartnersController extends Controller
                 $region = $city->region;
                 $country = $region->country;
                 $locationName = "{$city->name}, {$region->name}. {$country->iso}";
+                $address = $userLocation->address;
 
                 return [
                     'name' => $locationName,
-                    'value' => $city->id,
+                    'address' => $address,
+                    'city_id' => $city->id,
                 ];
             });
 
         $partner->locations = $locations;
+
+        $partner->operational_hours = $this->userService->showOperationalHours($user_id);
 
         return response()->json($partner);
     }
@@ -122,7 +142,11 @@ class PartnersController extends Controller
             ->where('partner_services.partner_id', $partner->user_id)
             ->get();
 
-        return response()->json($services);
+        if($services->isEmpty()) {
+            return response()->json(['message' => 'No services found for this partner'], 404);
+        }
+
+        return response()->json($services, 201);
     }
 
     public function updatePartnerServices(Request $request, int $userId)
@@ -193,6 +217,6 @@ class PartnersController extends Controller
             'partner_category_id' => $request->partner_category_id,
         ]);
 
-        return response()->json($businessService, 201);
+        return response()->json($businessService);
     }
 }
