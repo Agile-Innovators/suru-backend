@@ -13,6 +13,10 @@ class PartnerProfile extends Model
         'user_id',
         'description',
         'website_url',
+        'instagram_url',
+        'facebook_url',
+        'tiktok_url',
+        'currency_id',
         'partner_category_id',
     ];
 
