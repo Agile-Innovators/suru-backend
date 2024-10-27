@@ -47,7 +47,7 @@ class AuthController extends Controller
             'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
             'phone_number' => $request->user_type_id == 3 ? 'required|string|unique:users,phone_number' : 'nullable',
             'description' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
-            'website_url' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'website_url' => $request->user_type_id == 3 ? 'nullable|string' : 'nullable',
             'facebook_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
             'instagram_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
             'tiktok_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',

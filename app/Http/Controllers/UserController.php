@@ -116,13 +116,20 @@ class UserController extends Controller
             'name' => 'required|string',
             'phone_number' => 'required|string',
 
-            // Validations for regular users
-            'lastname1' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
-            'lastname2' => $user->user_type_id == 2 ? 'required|string' : 'nullable',
-
-            // Validations for partners
-            'description' => $user->user_type_id == 3 ? 'required|string' : 'nullable',
-            'website_url' => $user->user_type_id == 3 ? 'required|string' : 'nullable'
+            // Conditional validations for regular users
+            'lastname1' => 'nullable',
+            'lastname2' => 'nullable',
+            
+            // Conditional validations for partners
+            'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'phone_number' => $request->user_type_id == 3 ? 'required|string|unique:users,phone_number' : 'nullable',
+            'description' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'website_url' => $request->user_type_id == 3 ? 'nullable|string' : 'nullable',
+            'facebook_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
+            'instagram_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
+            'tiktok_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
+            'currency_id' => $request->user_type_id == 3 ? 'required|integer' : 'nullable',
+            'partner_category_id' => $request->user_type_id == 3 ? 'required|integer' : 'nullable',
         ]);
 
         if ($validator->fails()) {
