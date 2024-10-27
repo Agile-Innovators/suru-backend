@@ -220,6 +220,7 @@ class PropertyController extends Controller
             'properties.pets_allowed',
             'properties.green_area',
             'property_categories.name as property_category',
+            'property_categories.id as property_category_id',
             'property_transaction_types.id as property_transaction_id',
             'property_transaction_types.name as property_transaction',
             'property_transaction_types.id as property_transaction_id',
