@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Validator;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Services\UserService;
 
+use App\Mail\SendPartnerCredentials;
+use Illuminate\Support\Facades\Mail;
+
 class PartnersController extends Controller
 {
     protected $userService;
@@ -343,6 +346,9 @@ class PartnersController extends Controller
                 'partner_category_id' => $partnerRequest->partner_category_id,
                 'user_type_id' => 3,
             ];
+
+            // Send an email with the credentials to the partner
+            Mail::to($partnerRequest->email)->send(new SendPartnerCredentials($partnerRequest->name, $username, $password));
 
             return $this->authController->register(new Request($newRequest));
         }

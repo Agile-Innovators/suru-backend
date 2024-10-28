@@ -13,12 +13,18 @@ class SendPartnerCredentials extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $name;
+    public $username;
+    public $password;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($name, $username, $password)
     {
-        //
+        $this->name = $name;
+        $this->username = $username;
+        $this->password = $password;
     }
 
     /**
@@ -27,8 +33,21 @@ class SendPartnerCredentials extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Send Partner Credentials',
+            subject: 'Tus Credenciales de Partner',
         );
+    }
+
+    /**
+     * Get the message content definition.
+     */
+    public function build() 
+    {
+        return $this->view('mail.send-partner-credentials')
+            ->with([
+                'name' => $this->name,
+                'username' => $this->username,
+                'password' => $this->password,
+            ]);
     }
 
     /**
