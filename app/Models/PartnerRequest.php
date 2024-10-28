@@ -12,11 +12,9 @@ class PartnerRequest extends Model
     protected $table = 'partners_requests';
 
     protected $fillable = [
-        'username',
         'name',
         'email',
         'phone_number',
-        'image_url',
         'image_public_id',
         'description',
         'website_url',

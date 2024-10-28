@@ -15,11 +15,9 @@ return new class extends Migration
             $table->id();
 
             // User fields
-            $table->string('username')->unique();
             $table->string('name')->nullable();
             $table->string('email')->unique();
             $table->string('phone_number')->nullable()->unique();
-            $table->string('image_url')->nullable()->default('https://res.cloudinary.com/dvwtm566p/image/upload/v1728158504/users/dc8aagfamyqwaspllhz8.jpg');
             $table->string('image_public_id')->nullable()->default('users/dc8aagfamyqwaspllhz8');
             
             // Partner fields
@@ -30,9 +28,9 @@ return new class extends Migration
             $table->string('tiktok_url')->nullable();
             $table->foreignId('currency_id')->constrained('currencies')->onDelete('cascade');
             $table->foreignId('partner_category_id')->constrained('partner_categories')->onDelete('cascade');
-
-            // Review fields
             $table->string('partner_comments')->nullable();
+
+             // Review fields
             $table->foreignId('admin_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamp('reviewd_at')->nullable();
             $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');

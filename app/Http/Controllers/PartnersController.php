@@ -9,7 +9,9 @@ use App\Models\PartnerProfile;
 use App\Models\User;
 use App\Models\BusinessService;
 use App\Models\UserLocation;
+use App\Models\PartnerRequest;
 use Illuminate\Support\Facades\Validator;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Services\UserService;
 
 class PartnersController extends Controller
@@ -219,5 +221,58 @@ class PartnersController extends Controller
 
         return response()->json($businessService);
     }
+
+    // This method is used to receive the partner request and process it 
+    public function storePartnerRequest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|unique:users,email',
+            'name' => 'required|string',
+            'phone_number' => 'required|string|unique:users,phone_number',
+            //'image' => 'required|image |mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+            'description' => 'required|string',
+
+            'website_url' => 'nullable|string',
+            'instagram_url' => 'nullable|string',
+            'facebook_url' => 'nullable|string',
+            'tiktok_url' => 'nullable|string',
+            'currency_id' => 'required|exists:currencies,id',
+            'partner_category_id' => 'required|exists:partner_categories,id',
+            'partner_comments' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $partnerRequest = PartnerRequest::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'description' => $request->description,
+            'website_url' => $request->website_url,
+            'instagram_url' => $request->instagram_url,
+            'facebook_url' => $request->facebook_url,
+            'tiktok_url' => $request->tiktok_url,
+            'currency_id' => $request->currency_id,
+            'partner_category_id' => $request->partner_category_id,
+        ]);
+
+        // Upload the image if it exists
+        if ($request->hasFile('image')) {
+            $uploadedImage = Cloudinary::upload($request->image->getRealPath(), [
+                'folder' => 'users'
+            ]);
+
+            if ($uploadedImage) {
+                $publicId = $uploadedImage->getPublicId();
+                $partnerRequest->update(['image_public_id' => $publicId]);
+            }
+        }
+
+        return response()->json(['message' => 'Partner request created successfully'], 201);
+    }
+
+
 
 }
