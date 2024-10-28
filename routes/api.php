@@ -90,6 +90,7 @@ Route::get('/appointments', [AppointmentController::class, 'index']);
 
 // Endpoints Utilities
 Route::get('/utilities', [UtilityController::class, 'index']);
+Route::get('/currencies', [UtilityController::class, 'getCurrencies']);
 
 //Endpoints PropertyCategories
 Route::get('/property-categories', [PropertyCategoryController::class, 'index']);

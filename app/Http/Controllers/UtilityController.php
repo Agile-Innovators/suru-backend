@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Utility;
+use App\Models\Currency;
 use Illuminate\Http\Request;
 
 class UtilityController extends Controller
@@ -63,5 +64,21 @@ class UtilityController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Get all currencies.
+     */
+    public function getCurrencies()
+    {
+        $currencies = Currency::all();
+
+        if($currencies->isEmpty()) {
+            return response()->json([
+                'message' => 'No currencies found',
+            ], 404);
+        }
+
+        return response()->json($currencies);
     }
 }
