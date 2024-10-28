@@ -219,6 +219,7 @@ class PropertyController extends Controller
             'properties.garages',
             'properties.pets_allowed',
             'properties.green_area',
+            'properties.payment_frequency_id',
             'property_categories.name as property_category',
             'property_categories.id as property_category_id',
             'property_transaction_types.id as property_transaction_id',
