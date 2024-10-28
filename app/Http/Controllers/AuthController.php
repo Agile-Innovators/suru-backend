@@ -34,10 +34,10 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string|unique:users,username',
+            'username' => $request->user_type_id != 3 ? 'required|string|unique:users,username' : 'nullable|string|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'user_type_id' => 'required|integer|in:2,3', // 2 = Regular user, 3 = Partner
+            'user_type_id' => 'required|integer|in:1,2,3', // 1= Admin, 2 = Regular user, 3 = Partner
 
             // Conditional validations for regular users
             'lastname1' => 'nullable',

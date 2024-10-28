@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\AuthController;
+
 use Illuminate\Http\Request;
 use App\Models\PartnerCategory;
 use App\Models\PartnerService;
@@ -18,9 +20,12 @@ class PartnersController extends Controller
 {
     protected $userService;
 
+    protected $authController;
+
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
+        $this->authController = new AuthController($userService);
     }
 
     public function getPartnersCategories()
@@ -31,7 +36,7 @@ class PartnersController extends Controller
         )
             ->get();
 
-        if($categories->isEmpty()) {
+        if ($categories->isEmpty()) {
             return response()->json(['message' => 'No categories found'], 404);
         }
 
@@ -50,7 +55,7 @@ class PartnersController extends Controller
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
             ->get();
 
-        if($partners->isEmpty()) {
+        if ($partners->isEmpty()) {
             return response()->json(['message' => 'No partners found'], 404);
         }
 
@@ -76,7 +81,7 @@ class PartnersController extends Controller
             ->where('partner_profiles.partner_category_id', $category_id)
             ->get();
 
-        if($partners->isEmpty()) {
+        if ($partners->isEmpty()) {
             return response()->json(['message' => 'No partners found for this category'], 404);
         }
 
@@ -144,7 +149,7 @@ class PartnersController extends Controller
             ->where('partner_services.partner_id', $partner->user_id)
             ->get();
 
-        if($services->isEmpty()) {
+        if ($services->isEmpty()) {
             return response()->json(['message' => 'No services found for this partner'], 404);
         }
 
@@ -273,6 +278,75 @@ class PartnersController extends Controller
         return response()->json(['message' => 'Partner request created successfully'], 201);
     }
 
+    public function respondPartnerRequest(Request $request, int $partnerRequestId, int $userId)
+    {
+        // Verify that the user is an admin
+        $user = User::find($userId);
 
+        if ($user == null) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
 
+        if (!$user || $user->user_type_id != 1) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Verify that the partner request exists
+        $partnerRequest = PartnerRequest::find($partnerRequestId);
+        if (!$partnerRequest) {
+            return response()->json(['message' => 'Partner request not found'], 404);
+        }
+
+        // Verify that the request has not been reviewed yet
+        if ($partnerRequest->reviewd_at != null) {
+            return response()->json(['message' => 'Partner request already reviewed'], 400);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:Approved,Rejected',
+            'admin_comments' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $partnerRequest->update([
+            'status' => $request->status,
+            'admin_id' => $userId,
+            'admin_comments' => $request->admin_comments,
+            'reviewd_at' => now(),
+        ]);
+
+        if ($request->status == 'Approved') {
+            $password = bin2hex(random_bytes(8));
+            $username = strtolower(str_replace(' ', '', $partnerRequest->name));
+
+            $usernameExists = User::where('username', $username)->exists();
+
+            if ($usernameExists) {
+                $username .= rand(1, 100);
+            }
+
+            $newRequest = [
+                'username' => $username,
+                'password' => $password,
+                'email' => $partnerRequest->email,
+                'name' => $partnerRequest->name,
+                'phone_number' => $partnerRequest->phone_number,
+                'description' => $partnerRequest->description,
+                'website_url' => $partnerRequest->website_url,
+                'facebook_url' => $partnerRequest->facebook_url,
+                'instagram_url' => $partnerRequest->instagram_url,
+                'tiktok_url' => $partnerRequest->tiktok_url,
+                'currency_id' => $partnerRequest->currency_id,
+                'partner_category_id' => $partnerRequest->partner_category_id,
+                'user_type_id' => 3,
+            ];
+
+            return $this->authController->register(new Request($newRequest));
+        }
+
+        return response()->json(['message' => 'Partner request updated successfully'], 201);
+    }
 }
