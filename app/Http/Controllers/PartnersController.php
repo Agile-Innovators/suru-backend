@@ -219,4 +219,5 @@ class PartnersController extends Controller
 
         return response()->json($businessService);
     }
+
 }

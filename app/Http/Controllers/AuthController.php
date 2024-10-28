@@ -39,14 +39,20 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'user_type_id' => 'required|integer|in:2,3', // 2 = Regular user, 3 = Partner
 
-            // Conditional validations
+            // Conditional validations for regular users
             'lastname1' => 'nullable',
             'lastname2' => 'nullable',
             
+            // Conditional validations for partners
             'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
-            'phone_number' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'phone_number' => $request->user_type_id == 3 ? 'required|string|unique:users,phone_number' : 'nullable',
             'description' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
-            'website_url' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'website_url' => $request->user_type_id == 3 ? 'nullable|string' : 'nullable',
+            'facebook_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
+            'instagram_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
+            'tiktok_url' => $request->user_type_id == 3 ? 'nullable' : 'nullable',
+            'currency_id' => $request->user_type_id == 3 ? 'required|integer' : 'nullable',
+            'partner_category_id' => $request->user_type_id == 3 ? 'required|integer' : 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -66,7 +72,6 @@ class AuthController extends Controller
                 'phone_number' => $request->user_type_id == 3 ? $request->phone_number : null,
             ]);
 
-            // Create profiles
             if ($request->user_type_id == 2) {
                 UserProfile::create(['user_id' => $user->id]);
             } else if ($request->user_type_id == 3) {
@@ -74,6 +79,10 @@ class AuthController extends Controller
                     'user_id' => $user->id,
                     'description' => $request->description,
                     'website_url' => $request->website_url,
+                    'instagram_url' => $request->instagram_url,
+                    'facebook_url' => $request->facebook_url,
+                    'tiktok_url' => $request->tiktok_url,
+                    'currency_id' => $request->currency_id,
                     'partner_category_id' => $request->partner_category_id,
                 ]);
 
