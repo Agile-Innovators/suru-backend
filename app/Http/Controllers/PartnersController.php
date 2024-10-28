@@ -233,6 +233,17 @@ class PartnersController extends Controller
     // This method is used to receive the partner request and process it 
     public function storePartnerRequest(Request $request)
     {
+        // Verify that there isn't another request with the same email or phone number (to avoid duplicates)
+        $existingRequest = PartnerRequest::where('email', $request->email)
+            ->orWhere('phone_number', $request->phone_number)
+            ->first();
+
+
+        if ($existingRequest) {
+            return response()->json(['message' => 'A partner request already exists, please be patient or contact support if you think this is an error'], 409);
+        }
+
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|unique:users,email',
             'name' => 'required|string',
