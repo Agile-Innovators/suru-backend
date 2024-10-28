@@ -17,6 +17,8 @@ use App\Http\Controllers\FavoritesController;
 // Endpoints Authentication Module
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/password/email', [UserController::class, 'sendPasswordResetLink']);
+Route::post('/password/reset', [UserController::class, 'resetForgottenPassword']);
 
 Route::group(['middleware' => ['auth.jwt']], function () {
     Route::post('logout', [AuthController::class, 'logout']);

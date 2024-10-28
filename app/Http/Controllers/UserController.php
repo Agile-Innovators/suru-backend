@@ -4,17 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+
 use App\Models\UserOperationalHour;
 use App\Models\UserProfile;
 use App\Models\PartnerProfile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Models\PasswordResetToken;
+use Illuminate\Support\Str;
 
-//email provider
-use Resend\Laravel\Facades\Resend;
-//email template
-use App\Mail\Welcome;
+// Email
+use App\Mail\PasswordResetMail;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -119,7 +121,7 @@ class UserController extends Controller
             // Conditional validations for regular users
             'lastname1' => 'nullable',
             'lastname2' => 'nullable',
-            
+
             // Conditional validations for partners
             'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
             'phone_number' => $request->user_type_id == 3 ? 'required|string|unique:users,phone_number' : 'nullable',
@@ -200,13 +202,12 @@ class UserController extends Controller
 
                     $user->update(['image_public_id' => $publicId]);
                     $user->update(['image_url' => $url]);
-                    
                 }
             }
 
             $userType = $user->userType->name;
             $user->save();
-            
+
             return response()->json([
                 'message' => 'User updated successfully',
                 'user' => [
@@ -370,5 +371,60 @@ class UserController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function sendPasswordResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email|exists:users,email']);
+
+        // Check if the user exists
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Generate a unique token
+        $token = Str::random(60);
+
+        // Store the token in the database
+        PasswordResetToken::updateOrCreate(
+            ['email' => $request->email],
+            ['token' => $token, 'created_at' => now()]
+        );
+
+        // Build the reset password URL
+        # $url = 'http://localhost:5173/reset-password?token=' . $token . '&email=' . urlencode($request->email);
+        $url = 'https://suru-development-seven.vercel.app/reset-password?token=' . $token . '&email=' . urlencode($request->email);
+
+        // Send the email with the reset link
+        Mail::to($request->email)->send(new PasswordResetMail($url));
+
+        return response()->json(['message' => 'Password reset link sent!'], 200);
+    }
+
+    public function resetForgottenPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required',
+            'password' => 'required|string|min:8',
+        ]);
+
+        $passwordReset = PasswordResetToken::where('email', $request->email)->first();
+
+        if (!$passwordReset || $passwordReset->token !== $request->token) {
+            return response()->json(['message' => 'Invalid token'], 400);
+        }
+
+        // Found the user associated with the token
+        $user = User::where('email', $request->email)->first();
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        // Delete the token from the database
+        $passwordReset->delete();
+
+        return response()->json(['message' => 'Password has been reset successfully!'], 200);
     }
 }
