@@ -230,7 +230,37 @@ class PartnersController extends Controller
         return response()->json($businessService);
     }
 
-    // This method is used to receive the partner request and process it 
+    public function getPartnersByStatus(string $status, int $userId){
+        // Verify that the user is an admin
+        $user = User::find($userId);
+
+        if ($user == null) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if (!$user || $user->user_type_id != 1) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $validator = Validator::make(['status' => $status], [
+            'status' => 'required|in:Pending,Approved,Rejected',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $partnerRequests = PartnerRequest::where('status', $status)->get();
+
+        if ($partnerRequests->isEmpty()) {
+            return response()->json(['message' => 'No partner requests found'], 404);
+        }
+
+        return response()->json($partnerRequests);
+
+    }
+    
+
     public function storePartnerRequest(Request $request)
     {
         // Verify that there isn't another request with the same email or phone number (to avoid duplicates)
@@ -238,11 +268,9 @@ class PartnersController extends Controller
             ->orWhere('phone_number', $request->phone_number)
             ->first();
 
-
         if ($existingRequest) {
             return response()->json(['message' => 'A partner request already exists, please be patient or contact support if you think this is an error'], 409);
         }
-
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|unique:users,email',
