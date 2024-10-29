@@ -230,8 +230,9 @@ class PartnersController extends Controller
         return response()->json($businessService);
     }
 
-    public function getPartnersByStatus(string $status, int $userId){
-        // Verify that the user is an admin
+    public function getPartnersByStatus(string $status, int $userId)
+    {
+        // Verifica que el usuario sea un admin
         $user = User::find($userId);
 
         if ($user == null) {
@@ -256,10 +257,41 @@ class PartnersController extends Controller
             return response()->json(['message' => 'No partner requests found'], 404);
         }
 
-        return response()->json($partnerRequests);
+        // Reemplazar el public_id por la URL
+        $partnerRequests->transform(function ($request) {
+            $request->image = cloudinary()->getUrl($request->image_public_id);
+            // Quitar el public_id
+            unset($request->image_public_id);
+            return $request;
+        });
 
+        return response()->json($partnerRequests);
     }
-    
+
+
+    public function getPartnerRequest(int $partnerRequestId, int $userId)
+    {
+        $user = User::find($userId);
+
+        if ($user == null) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if (!$user || $user->user_type_id != 1) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $partnerRequest = PartnerRequest::find($partnerRequestId);
+
+        if (!$partnerRequest) {
+            return response()->json(['message' => 'Partner request not found'], 404);
+        }
+
+        $partnerRequest->image_public_url = cloudinary()->getUrl($partnerRequest->image_public_id);
+        unset($partnerRequest->image_public_id);
+
+        return response()->json($partnerRequest);
+    }
 
     public function storePartnerRequest(Request $request)
     {

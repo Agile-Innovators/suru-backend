@@ -46,7 +46,8 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
 
     // Endpoints Partners Administrator
-    Route::get('/partner-request/{status}/{userId}', [PartnersController::class, 'getPartnersByStatus']);
+    Route::get('/partner-requests/{status}/{userId}', [PartnersController::class, 'getPartnersByStatus']);
+    Route::get('/partner-request/{partnerRequestId}/{userId}', [PartnersController::class, 'getPartnerRequest']);
     Route::put('/partner-request/{partnerRequestId}/{userId}', [PartnersController::class, 'respondPartnerRequest']);
 
     // Endpoints Appointments Module
