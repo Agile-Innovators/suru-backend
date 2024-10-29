@@ -287,7 +287,7 @@ class PartnersController extends Controller
             return response()->json(['message' => 'Partner request not found'], 404);
         }
 
-        $partnerRequest->image_public_url = cloudinary()->getUrl($partnerRequest->image_public_id);
+        $partnerRequest->image = cloudinary()->getUrl($partnerRequest->image_public_id);
         unset($partnerRequest->image_public_id);
 
         return response()->json($partnerRequest);
