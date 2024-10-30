@@ -106,13 +106,9 @@ class PartnersController extends Controller
             'partner_profiles.tiktok_url',
             'partner_profiles.currency_id',
             'partner_categories.name as category_name',
-            // 'partner_services.business_services_id',
-            // 'partner_services.price',
-            // 'partner_services.max_price',
         )
             ->join('partner_profiles', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
-            // ->join('partner_services', 'partner_profiles.user_id', '=', 'partner_services.partner_id')
             ->where('users.id', $user_id)
             ->first();
 
@@ -141,12 +137,22 @@ class PartnersController extends Controller
 
         $partner->operational_hours = $this->userService->showOperationalHours($user_id);
 
-        // $partnerServices = PartnerProfile::where('user_id', $user_id)
-        // ->with('partnerServices')
-        // ->first()
-        // ->partnerServices ?? collect();
-    
-        // $partner->services = $partnerServices;
+        $partnerServices = PartnerService::select('partner_services.price',
+        'partner_services.price_max',
+        'business_services.name',
+        'business_services.description',
+        
+        )
+        ->join('business_services', 'business_services.id', '=', 'partner_services.business_service_id')
+        ->where('partner_id', $user_id)
+            ->get();
+
+        $services = [];
+        foreach ($partnerServices as $service) {
+            $services[] = $service;
+        }
+
+        $partner->services = $services;
 
         return response()->json($partner);
     }
