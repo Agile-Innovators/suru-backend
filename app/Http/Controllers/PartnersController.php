@@ -144,7 +144,8 @@ class PartnersController extends Controller
         // $partner->with('')
         $partner->services = PartnerProfile::where('user_id', $user_id)
         ->with('partnerServices')
-        ->get();
+        ->get()
+        ->flatMap->partnerServices;
 
         return response()->json($partner);
     }
