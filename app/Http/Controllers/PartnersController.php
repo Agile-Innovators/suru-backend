@@ -141,12 +141,12 @@ class PartnersController extends Controller
 
         $partner->operational_hours = $this->userService->showOperationalHours($user_id);
 
-        $partnerServices = PartnerProfile::where('user_id', $user_id)
-        ->with('partnerServices')
-        ->first()
-        ->partnerServices ?? collect();
+        // $partnerServices = PartnerProfile::where('user_id', $user_id)
+        // ->with('partnerServices')
+        // ->first()
+        // ->partnerServices ?? collect();
     
-        $partner->services = $partnerServices;
+        // $partner->services = $partnerServices;
 
         return response()->json($partner);
     }
