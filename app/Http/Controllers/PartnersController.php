@@ -52,9 +52,10 @@ class PartnersController extends Controller
     {
         $partners = PartnerProfile::select(
             'partner_profiles.description',
+            'partner_profiles.user_id',
             'partner_categories.name as category_name',
             'users.name as partner_name',
-            'users.image_url as image'
+            'users.image_url as image',
         )
             ->join('users', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
@@ -101,9 +102,14 @@ class PartnersController extends Controller
             'users.phone_number',
             'users.image_url',
             'partner_profiles.description',
-            'partner_categories.name as category_name'
+            'partner_profiles.website_url',
+            'partner_profiles.instagram_url',
+            'partner_profiles.facebook_url',
+            'partner_profiles.tiktok_url',
+            'partner_profiles.currency_id',
+            'partner_categories.name as category_name',
         )
-            ->join('partner_profiles', 'users.id', '=', 'partner_profiles.user_id')
+            ->join('partner_profiles', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
             ->where('users.id', $user_id)
             ->first();
@@ -132,6 +138,23 @@ class PartnersController extends Controller
         $partner->locations = $locations;
 
         $partner->operational_hours = $this->userService->showOperationalHours($user_id);
+
+        $partnerServices = PartnerService::select('partner_services.price',
+        'partner_services.price_max',
+        'business_services.name',
+        'business_services.description',
+        
+        )
+        ->join('business_services', 'business_services.id', '=', 'partner_services.business_service_id')
+        ->where('partner_id', $user_id)
+            ->get();
+
+        $services = [];
+        foreach ($partnerServices as $service) {
+            $services[] = $service;
+        }
+
+        $partner->services = $services;
 
         return response()->json($partner);
     }
