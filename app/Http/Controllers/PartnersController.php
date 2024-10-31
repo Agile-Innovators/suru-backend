@@ -41,6 +41,12 @@ class PartnersController extends Controller
         )
             ->get();
 
+        // Obtener la cantidad de partners por categoría
+        foreach ($categories as $category) {
+            $category->partner_count = PartnerProfile::where('partner_category_id', $category->id)->count();
+        }
+
+
         if ($categories->isEmpty()) {
             return response()->json(['message' => 'No categories found'], 404);
         }

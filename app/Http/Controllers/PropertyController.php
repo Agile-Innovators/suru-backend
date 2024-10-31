@@ -231,6 +231,8 @@ class PropertyController extends Controller
             'currencies.code as currency_code',
             'payment_frequencies.name as payment_frequency',
             'properties.user_id',
+            'users.name as owner_name',
+            'users.phone_number as owner_phone',
         )
             ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
             ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
@@ -238,6 +240,7 @@ class PropertyController extends Controller
             ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
             ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
             ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+            ->leftJoin('users', 'users.id', '=', 'properties.user_id')
             ->where('properties.id', $id)
             ->first();
 
