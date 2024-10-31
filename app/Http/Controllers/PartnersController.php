@@ -19,6 +19,8 @@ use App\Services\UserService;
 use App\Mail\SendPartnerCredentials;
 use Illuminate\Support\Facades\Mail;
 
+use Illuminate\Support\Facades\Http;
+
 class PartnersController extends Controller
 {
     protected $userService;
@@ -230,6 +232,63 @@ class PartnersController extends Controller
         return response()->json($businessService);
     }
 
+    public function changeCurrency(Request $request, int $partnerId)
+    {
+        // Validar que se pase el nuevo currency_id y que tenga un valor de 1 o 2
+        $validator = Validator::make($request->all(), [
+            'currency_id' => 'required|in:1,2',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $newCurrencyId = $request->currency_id;
+
+        // Obtener el partner profile
+        $partnerProfile = PartnerProfile::where('user_id', $partnerId)->first();
+
+        if (!$partnerProfile) {
+            return response()->json(['message' => 'Partner profile not found'], 404);
+        }
+
+        // Obtener el tipo de cambio de la API
+        $response = Http::get('https://apis.gometa.org/tdc/tdc.json');
+
+        if ($response->failed()) {
+            return response()->json(['message' => 'Unable to fetch exchange rate'], 500);
+        }
+
+        $data = $response->json();
+        $usdToCrcRate = $data['venta']; // Tasa de cambio de USD a CRC
+        $crcToUsdRate = 1 / $usdToCrcRate; // Tasa de cambio de CRC a USD
+
+        // Cambiar el currency_id
+        $partnerProfile->currency_id = $newCurrencyId;
+        $partnerProfile->save();
+
+        // Actualizar precios de los partner services
+        if ($newCurrencyId == 2) { // De USD a CRC
+            PartnerService::where('partner_id', $partnerId)->each(function ($service) use ($usdToCrcRate) {
+                $service->price *= $usdToCrcRate;
+                if ($service->price_max) {
+                    $service->price_max *= $usdToCrcRate;
+                }
+                $service->save();
+            });
+        } elseif ($newCurrencyId == 1) { // De CRC a USD
+            PartnerService::where('partner_id', $partnerId)->each(function ($service) use ($crcToUsdRate) {
+                $service->price *= $crcToUsdRate;
+                if ($service->price_max) {
+                    $service->price_max *= $crcToUsdRate;
+                }
+                $service->save();
+            });
+        }
+
+        return response()->json(['message' => 'Currency updated and prices converted successfully'], 200);
+    }
+
     public function getPartnersByStatus(string $status, int $userId)
     {
         // Verifica que el usuario sea un admin
@@ -268,7 +327,6 @@ class PartnersController extends Controller
         return response()->json($partnerRequests);
     }
 
-
     public function getPartnerRequest(int $partnerRequestId, int $userId)
     {
         $user = User::find($userId);
@@ -301,7 +359,7 @@ class PartnersController extends Controller
             ->first();
 
         if ($existingRequest) {
-            return response()->json(['message' => 'A partner request already exists, please be patient or contact support if you think this is an error'], 409);
+            return response()->json(['message' => 'A partner request already exists with this email or phone number, please be patient or contact support if you think this is an error'], 409);
         }
 
         $validator = Validator::make($request->all(), [

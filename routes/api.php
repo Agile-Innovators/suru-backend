@@ -44,6 +44,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::get('/partner-services/{user_id}', [PartnersController::class, 'getPartnerServices']);
     Route::put('/partner-update-services/{user_id}', [PartnersController::class, 'updatePartnerServices']);
     Route::post('/add-business-service', [PartnersController::class, 'addBusinessService']);
+    Route::post('/partners/{partnerId}/change-currency', [PartnersController::class, 'changeCurrency']);
 
     // Endpoints Partners Administrator
     Route::get('/partner-requests/{status}/{userId}', [PartnersController::class, 'getPartnersByStatus']);
