@@ -424,13 +424,9 @@ class PartnersController extends Controller
 
     public function storePartnerRequest(Request $request)
     {
-        // Verify that there isn't another request with the same email or phone number (to avoid duplicates)
-        $existingRequest = PartnerRequest::where('email', $request->email)
-            ->orWhere('phone_number', $request->phone_number)
-            ->first();
-
-        if ($existingRequest) {
-            return response()->json(['message' => 'A partner request already exists with this email or phone number, please be patient or contact support if you think this is an error'], 409);
+        if (PartnerRequest::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists() ||
+            User::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists()) {
+            return response()->json(['message' => 'A partner request or user already exists with this email or phone number, please be patient or contact support if you think this is an error'], 409);
         }
 
         $validator = Validator::make($request->all(), [
@@ -445,6 +441,7 @@ class PartnersController extends Controller
             'facebook_url' => 'nullable|string',
             'tiktok_url' => 'nullable|string',
             'currency_id' => 'required|exists:currencies,id',
+            'city_id' => 'required|exists:cities,id',
             'partner_category_id' => 'required|exists:partner_categories,id',
             'partner_comments' => 'nullable|string',
         ]);
@@ -463,6 +460,7 @@ class PartnersController extends Controller
             'facebook_url' => $request->facebook_url,
             'tiktok_url' => $request->tiktok_url,
             'currency_id' => $request->currency_id,
+            'city_id' => $request->city_id,
             'partner_category_id' => $request->partner_category_id,
         ]);
 

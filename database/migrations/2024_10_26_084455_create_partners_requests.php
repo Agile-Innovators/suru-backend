@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('facebook_url')->nullable();
             $table->string('tiktok_url')->nullable();
             $table->foreignId('currency_id')->constrained('currencies')->onDelete('cascade');
+            $table->foreignId('city_id')->constrained('cities')->onDelete('cascade');
             $table->foreignId('partner_category_id')->constrained('partner_categories')->onDelete('cascade');
             $table->string('partner_comments')->nullable();
 
