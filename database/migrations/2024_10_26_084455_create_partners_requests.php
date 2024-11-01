@@ -30,6 +30,7 @@ return new class extends Migration
             $table->foreignId('city_id')->constrained('cities')->onDelete('cascade');
             $table->foreignId('partner_category_id')->constrained('partner_categories')->onDelete('cascade');
             $table->string('partner_comments')->nullable();
+            $table->string('address')->nullable();
 
              // Review fields
             $table->foreignId('admin_id')->nullable()->constrained('users')->onDelete('cascade');

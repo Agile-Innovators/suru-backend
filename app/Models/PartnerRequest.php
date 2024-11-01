@@ -22,6 +22,7 @@ class PartnerRequest extends Model
         'facebook_url',
         'tiktok_url',
         'city_id',
+        'address',
         'currency_id',
         'partner_category_id',
         'partner_comments',

@@ -431,7 +431,7 @@ class PartnersController extends Controller
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|unique:users,email',
-            'name' => 'required|string',
+            'name' => 'required|string|max:255',
             'phone_number' => 'required|string|unique:users,phone_number',
             //'image' => 'required|image |mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             'description' => 'required|string',
@@ -442,8 +442,9 @@ class PartnersController extends Controller
             'tiktok_url' => 'nullable|string',
             'currency_id' => 'required|exists:currencies,id',
             'city_id' => 'required|exists:cities,id',
+            'address' => 'nullable|string|max:255',
             'partner_category_id' => 'required|exists:partner_categories,id',
-            'partner_comments' => 'nullable|string',
+            'partner_comments' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -461,6 +462,7 @@ class PartnersController extends Controller
             'tiktok_url' => $request->tiktok_url,
             'currency_id' => $request->currency_id,
             'city_id' => $request->city_id,
+            'address' => $request->address,
             'partner_category_id' => $request->partner_category_id,
         ]);
 
@@ -523,9 +525,7 @@ class PartnersController extends Controller
             $password = bin2hex(random_bytes(8));
             $username = strtolower(str_replace(' ', '', $partnerRequest->name));
 
-            $usernameExists = User::where('username', $username)->exists();
-
-            if ($usernameExists) {
+            while (User::where('username', $username)->exists()) {
                 $username .= rand(1, 100);
             }
 
@@ -541,7 +541,9 @@ class PartnersController extends Controller
                 'instagram_url' => $partnerRequest->instagram_url,
                 'tiktok_url' => $partnerRequest->tiktok_url,
                 'currency_id' => $partnerRequest->currency_id,
+                'city_id' => $partnerRequest->city_id,
                 'partner_category_id' => $partnerRequest->partner_category_id,
+                'image_public_id' => $partnerRequest->image_public_id,
                 'user_type_id' => 3,
             ];
 

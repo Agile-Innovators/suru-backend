@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
-use App\Mail\Welcome;
-use App\Mail\Resend;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Services\UserService;
 
@@ -17,7 +14,7 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use App\Models\UserProfile;
 use App\Models\PartnerProfile;
 use App\Models\User;
-
+use App\Models\UserLocation;
 
 class AuthController extends Controller
 {
@@ -36,15 +33,15 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'username' => $request->user_type_id != 3 ? 'required|string|unique:users,username' : 'nullable|string|unique:users,username',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:8|max:128',
             'user_type_id' => 'required|integer|in:1,2,3', // 1= Admin, 2 = Regular user, 3 = Partner
 
             // Conditional validations for regular users
             'lastname1' => 'nullable',
             'lastname2' => 'nullable',
-            
+
             // Conditional validations for partners
-            'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
+            'name' => $request->user_type_id == 3 ? 'required|string' : 'nullable|max:255',
             'phone_number' => $request->user_type_id == 3 ? 'required|string|unique:users,phone_number' : 'nullable',
             'description' => $request->user_type_id == 3 ? 'required|string' : 'nullable',
             'website_url' => $request->user_type_id == 3 ? 'nullable|string' : 'nullable',
@@ -72,7 +69,7 @@ class AuthController extends Controller
                 'phone_number' => $request->user_type_id == 3 ? $request->phone_number : null,
             ]);
 
-            if ($request->user_type_id == 2) {
+            if (($request->user_type_id == 1) || ($request->user_type_id == 2)) {
                 UserProfile::create(['user_id' => $user->id]);
             } else if ($request->user_type_id == 3) {
                 PartnerProfile::create([
@@ -98,13 +95,26 @@ class AuthController extends Controller
                         ]);
                     }
                 }
+                
+                if ($request->image_public_id) {
+                    $user->update([
+                        'image_public_id' => $request->image_public_id,
+                        'image_url' => cloudinary()->getUrl($request->image_public_id),
+                    ]);
+                }
+
+                if ($request->city_id) {
+                    UserLocation::create([
+                        'user_id' => $user->id,
+                        'city_id' => $request->city_id,
+                        'address' => $request->address,
+                    ]);
+                }
             }
 
             // Create default operational hours
             $this->userService->createUserOperationalHours($user->id);
-
             $user->load('userType');
-
             $token = JWTAuth::fromUser($user);
 
             $userData = [
@@ -115,14 +125,6 @@ class AuthController extends Controller
                 'image_url' => $user->image_url ?? "https://res.cloudinary.com/dvwtm566p/image/upload/v1728158504/users/dc8aagfamyqwaspllhz8.jpg",
                 'user_type' => $user->userType->name,
             ];
-
-            // Welcome email
-            // Resend::emails()->send([
-            //     'from' => env('MAIL_FROM_NAME') . ' <' . env('MAIL_FROM_ADDRESS') . '>',
-            //     'to' => $user->email,
-            //     'subject' => 'Welcome To Suru Test',
-            //     'html' => (new Welcome($user->username))->render(),
-            // ]);
 
             return response()->json([
                 'message' => 'User created successfully',
