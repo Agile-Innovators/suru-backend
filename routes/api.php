@@ -84,6 +84,7 @@ Route::get('/properties-related/{property_id}', [PropertyController::class, 'sho
 
 // Endpoints Locations Module
 Route::get('/locations', [LocationController::class, 'getAllLocations']);
+Route::get('/location/{cityId}', [LocationController::class, 'getOneLocation']);
 
 // Endpoints Partners Module
 Route::get('/partners-categories', [PartnersController::class, 'getPartnersCategories']);

@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LocationController;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
+
 use App\Models\PartnerCategory;
 use App\Models\PartnerService;
 use App\Models\PartnerProfile;
@@ -17,20 +21,18 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Services\UserService;
 
 use App\Mail\SendPartnerCredentials;
-use Illuminate\Support\Facades\Mail;
-
-use Illuminate\Support\Facades\Http;
 
 class PartnersController extends Controller
 {
     protected $userService;
-
     protected $authController;
+    protected $locationController;
 
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
         $this->authController = new AuthController($userService);
+        $this->locationController = new LocationController();
     }
 
     public function getPartnersCategories()
@@ -390,8 +392,20 @@ class PartnersController extends Controller
         // Reemplazar el public_id por la URL
         $partnerRequests->transform(function ($request) {
             $request->image = cloudinary()->getUrl($request->image_public_id);
-            // Quitar el public_id
             unset($request->image_public_id);
+            return $request;
+        });
+
+        // Cambiar el id de la ciudad por el nombre
+        $partnerRequests->transform(function ($request) {
+            $location = $this->locationController->getOneLocation($request->city_id);
+
+            if ($location->getStatusCode() === 200) {
+                $locationData = $location->getData();
+                $request->location_name = $locationData->name;
+            } else {
+                $request->location_name = 'Unknown Location';
+            }
             return $request;
         });
 
@@ -419,13 +433,23 @@ class PartnersController extends Controller
         $partnerRequest->image = cloudinary()->getUrl($partnerRequest->image_public_id);
         unset($partnerRequest->image_public_id);
 
+        $location = $this->locationController->getOneLocation($partnerRequest->city_id);
+        if ($location->getStatusCode() === 200) {
+            $locationData = $location->getData();
+            $partnerRequest->location_name = $locationData->name;
+        } else {
+            $partnerRequest->location_name = 'Unknown Location';
+        }
+
         return response()->json($partnerRequest);
     }
 
     public function storePartnerRequest(Request $request)
     {
-        if (PartnerRequest::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists() ||
-            User::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists()) {
+        if (
+            PartnerRequest::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists() ||
+            User::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists()
+        ) {
             return response()->json(['message' => 'A partner request or user already exists with this email or phone number, please be patient or contact support if you think this is an error'], 409);
         }
 
@@ -542,6 +566,7 @@ class PartnersController extends Controller
                 'tiktok_url' => $partnerRequest->tiktok_url,
                 'currency_id' => $partnerRequest->currency_id,
                 'city_id' => $partnerRequest->city_id,
+                'address' => $partnerRequest->address,
                 'partner_category_id' => $partnerRequest->partner_category_id,
                 'image_public_id' => $partnerRequest->image_public_id,
                 'user_type_id' => 3,

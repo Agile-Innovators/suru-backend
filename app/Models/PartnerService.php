@@ -16,6 +16,13 @@ class PartnerService extends Model
         'business_service_id',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function partnerProfile()
     {
         return $this->belongsTo(PartnerProfile::class);

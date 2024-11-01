@@ -15,6 +15,8 @@ class UserLocation extends Model
         'address',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+    
     public function partnerProfile()
     {
         return $this->belongsTo(PartnerProfile::class);

@@ -15,6 +15,8 @@ class UserProfile extends Model
         'lastname2',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function user()
     {
         return $this->belongsTo(User::class);

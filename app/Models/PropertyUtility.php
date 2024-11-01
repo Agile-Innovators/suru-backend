@@ -14,6 +14,8 @@ class PropertyUtility extends Model
         'utility_id',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function property()
     {
         return $this->belongsTo(Property::class);

@@ -30,6 +30,18 @@ class LocationController extends Controller
         return response()->json($locations);
     }
 
+    public function getOneLocation(int $cityId){
+        $city = City::find($cityId);
+        $region = Region::find($city->region_id);
+        $country = Country::find($region->country_id);
+        $locationName = "{$city->name}, {$region->name}. {$country->iso}";
+
+        return response()->json([
+            'name' => $locationName,
+            'value' => $city->id,
+        ]);
+    }
+
     public function associateUserWithLocation(Request $request)
     {
         $user = User::find($request->user_id);
@@ -105,5 +117,25 @@ class LocationController extends Controller
         ]);
     }
     
+    public function getUserLocation(int $userId){
+        $user = User::find($userId);
+        $userLocation = UserLocation::where('user_id', $user->id)->first();
+
+        if (!$userLocation) {
+            return response()->json(['message' => 'User location not found'], 404);
+        }
+
+        $city = City::find($userLocation->city_id);
+        $region = Region::find($city->region_id);
+        $country = Country::find($region->country_id);
+
+        // Format location (city, region, country)
+        $locationName = "{$city->name}, {$region->name}. {$country->iso}";
+        
+        return response()->json([
+            'location' => $locationName,
+            'address' => $userLocation->address,
+        ]);
+    }
 
 }
