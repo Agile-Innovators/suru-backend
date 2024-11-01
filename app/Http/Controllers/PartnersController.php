@@ -113,7 +113,7 @@ class PartnersController extends Controller
             ->get();
 
         if ($partners->isEmpty()) {
-            return response()->json(['message' => 'No partners found for this category'], 404);
+            return response()->json([]);
         }
 
         $partnerServices = PartnerService::select(
