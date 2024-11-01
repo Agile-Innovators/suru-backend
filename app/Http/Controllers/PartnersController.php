@@ -94,10 +94,14 @@ class PartnersController extends Controller
 
     public function getPartnersByCategory(string $category_id)
     {
-        $category = PartnerCategory::find($category_id);
 
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
+
+        if ($category_id != 0) {
+            $category = PartnerCategory::find($category_id);
+
+            if (!$category) {
+                return response()->json(['message' => 'Category not found'], 404);
+            }
         }
 
         $partners = PartnerProfile::select(
@@ -109,7 +113,9 @@ class PartnersController extends Controller
         )
             ->join('users', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
-            ->where('partner_profiles.partner_category_id', $category_id)
+            ->when($category_id != 0, function ($query) use ($category_id) {
+                return $query->where('partner_profiles.partner_category_id', $category_id);
+            })
             ->get();
 
         if ($partners->isEmpty()) {
