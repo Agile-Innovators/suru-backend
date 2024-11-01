@@ -71,6 +71,24 @@ class PartnersController extends Controller
             return response()->json(['message' => 'No partners found'], 404);
         }
 
+        $partnerServices = PartnerService::select(
+            'partner_services.partner_id',
+            'partner_services.id',
+            'business_services.name',
+        )
+            ->join('business_services', 'business_services.id', '=', 'partner_services.business_service_id')
+            ->get()
+            ->groupBy('partner_id');
+
+        $partners->transform(function ($partner) use ($partnerServices) {
+            // Añadir los servicios correspondientes al perfil actual
+            $partner->services = $partnerServices->get($partner->user_id, collect());
+            return $partner;
+        });
+
+
+        // $partners->services = $partnerServices;
+
         return response()->json($partners);
     }
 
@@ -145,14 +163,16 @@ class PartnersController extends Controller
 
         $partner->operational_hours = $this->userService->showOperationalHours($user_id);
 
-        $partnerServices = PartnerService::select('partner_services.price',
-        'partner_services.price_max',
-        'business_services.name',
-        'business_services.description',
-        
+        $partnerServices = PartnerService::select(
+            'partner_services.id',
+            'partner_services.price',
+            'partner_services.price_max',
+            'business_services.name',
+            'business_services.description',
+
         )
-        ->join('business_services', 'business_services.id', '=', 'partner_services.business_service_id')
-        ->where('partner_id', $user_id)
+            ->join('business_services', 'business_services.id', '=', 'partner_services.business_service_id')
+            ->where('partner_id', $user_id)
             ->get();
 
         $services = [];
