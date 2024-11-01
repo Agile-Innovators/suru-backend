@@ -102,6 +102,7 @@ class PartnersController extends Controller
 
         $partners = PartnerProfile::select(
             'partner_profiles.description',
+            'partner_profiles.user_id',
             'partner_categories.name as category_name',
             'users.name as partner_name',
             'users.image_url as image'
@@ -114,6 +115,21 @@ class PartnersController extends Controller
         if ($partners->isEmpty()) {
             return response()->json(['message' => 'No partners found for this category'], 404);
         }
+
+        $partnerServices = PartnerService::select(
+            'partner_services.partner_id',
+            'partner_services.id',
+            'business_services.name',
+        )
+            ->join('business_services', 'business_services.id', '=', 'partner_services.business_service_id')
+            ->get()
+            ->groupBy('partner_id');
+
+        $partners->transform(function ($partner) use ($partnerServices) {
+            // Añadir los servicios correspondientes al perfil actual
+            $partner->services = $partnerServices->get($partner->user_id, collect());
+            return $partner;
+        });
 
         return response()->json($partners);
     }
