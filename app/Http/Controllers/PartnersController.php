@@ -467,7 +467,10 @@ class PartnersController extends Controller
     public function storePartnerRequest(Request $request)
     {
         if (
-            PartnerRequest::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists() ||
+            PartnerRequest::where('email', $request->email)
+                ->orWhere('phone_number', $request->phone_number)
+                ->where('status', 'Pending')
+                ->exists() ||
             User::where('email', $request->email)->orWhere('phone_number', $request->phone_number)->exists()
         ) {
             return response()->json(['message' => 'A partner request or user already exists with this email or phone number, please be patient or contact support if you think this is an error'], 409);

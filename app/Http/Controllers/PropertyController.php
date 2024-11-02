@@ -279,7 +279,7 @@ class PropertyController extends Controller
 
         }
 
-        $relatedProperties = Property::select(
+        $properties = Property::select(
             'properties.id',
             'properties.title',
             'properties.description',
@@ -296,8 +296,11 @@ class PropertyController extends Controller
             'properties.pets_allowed',
             'properties.green_area',
             'property_categories.name as property_category',
+            'property_categories.id as property_category_id',   
             'property_transaction_types.name as property_transaction',
+            'property_transaction_types.id as property_transaction_id',
             'cities.name as city',
+            'cities.id as city_id',
             'regions.name as region',
             'currencies.code as currency_code',
             'payment_frequencies.name as payment_frequency',
@@ -309,31 +312,105 @@ class PropertyController extends Controller
             ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
             ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
             ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
-            ->where('properties.id', '!=', $property_id)
-            ->where(function($query) use ($property_id){
-                $query->where('properties.city_id', Property::select('city_id')->where('id', $property_id))
-                    ->orWhere('cities.region_id', Property::select('region_id')->where('id', $property_id));
-            })
-            ->limit(3)
+            ->where('city_id', $property->city_id)
+            ->orderBy('properties.id', 'desc')
+            ->take(3)
             ->get();
 
-        // If there are less than 3 properties in the same city or region, add the current property to the response
-        if ($relatedProperties->count() < 3) {
-            $relatedProperties = $relatedProperties->merge([$property]);
+        if($properties->count() < 3){
+            $properties = $properties->concat(Property::select(
+                'properties.id',
+                'properties.title',
+                'properties.description',
+                'properties.price',
+                'properties.rent_price',
+                'properties.deposit_price',
+                'properties.availability_date',
+                'properties.size_in_m2',
+                'properties.bedrooms',
+                'properties.bathrooms',
+                'properties.floors',
+                'properties.garages',
+                'properties.pools',
+                'properties.pets_allowed',
+                'properties.green_area',
+                'property_categories.name as property_category',
+                'property_categories.id as property_category_id',   
+                'property_transaction_types.name as property_transaction',
+                'property_transaction_types.id as property_transaction_id',
+                'cities.name as city',
+                'cities.id as city_id',
+                'regions.name as region',
+                'currencies.code as currency_code',
+                'payment_frequencies.name as payment_frequency',
+                'properties.user_id',
+            )
+                ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+                ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+                ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
+                ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
+                ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
+                ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+                ->where('city_id', $property->city->region->id)
+                ->orderBy('properties.id', 'desc')
+                ->take(3)
+                ->get());
         }
 
-        // Obtain properties first image and add them to the response
-        foreach ($relatedProperties as $property) {
-            $property->image = $property->propertyImages()->first()->url;
+        if($properties->count() < 3){
+            $properties = $properties->concat(Property::select(
+                'properties.id',
+                'properties.title',
+                'properties.description',
+                'properties.price',
+                'properties.rent_price',
+                'properties.deposit_price',
+                'properties.availability_date',
+                'properties.size_in_m2',
+                'properties.bedrooms',
+                'properties.bathrooms',
+                'properties.floors',
+                'properties.garages',
+                'properties.pools',
+                'properties.pets_allowed',
+                'properties.green_area',
+                'property_categories.name as property_category',
+                'property_categories.id as property_category_id',   
+                'property_transaction_types.name as property_transaction',
+                'property_transaction_types.id as property_transaction_id',
+                'cities.name as city',
+                'cities.id as city_id',
+                'regions.name as region',
+                'currencies.code as currency_code',
+                'payment_frequencies.name as payment_frequency',
+                'properties.user_id',
+            )
+                ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
+                ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
+                ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
+                ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
+                ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
+                ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
+                ->where('city_id', $property->city->region->country->id)
+                ->orderBy('properties.id', 'desc')
+                ->take(3)
+                ->get());
         }
-        
-        if ($relatedProperties->isEmpty()) {
+
+        if($properties->count() < 3){
             return response()->json([
-                'message' => 'There are no related properties'
+                'message' => 'No se encontraron propiedades relacionadas'
             ], 404);
         }
 
-        return response()->json($relatedProperties);
+        foreach ($properties as $property) {
+            $property->image = $property->propertyImages()->value('url');
+            $property->utilities = $property->utilities()->get();
+        }
+
+        $properties = $properties->take(3);
+
+        return response()->json($properties);
     }
     
 
