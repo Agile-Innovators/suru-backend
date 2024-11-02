@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\UserLocation;
 
 use App\Models\UserOperationalHour;
 use App\Models\UserProfile;
@@ -61,7 +62,7 @@ class UserController extends Controller
         }
 
         // Obtainig profile information
-        if ($user->user_type_id == 2) { // Normal user
+        if (($user->user_type_id == 1) || $user->user_type_id == 2) { // Admin or Normal user
             $userProfile = UserProfile::select(
                 'lastname1',
                 'lastname2'
@@ -117,6 +118,8 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'name' => 'required|string',
             'phone_number' => 'required|string',
+            'city_id' => 'required|integer',
+            'address' => 'nullable|string',
 
             // Conditional validations for regular users
             'lastname1' => 'nullable',
@@ -153,38 +156,39 @@ class UserController extends Controller
                 $user->update($fieldsToUpdate);
             }
 
-            // Update profiles
-            switch ($user->user_type_id) {
-                case 2: // Regular user
-                    $userProfile = UserProfile::where('user_id', $id)->first();
-                    if ($userProfile) {
-                        $fieldsToUpdateProfile = [];
-                        foreach ($request->all() as $key => $value) {
-                            if ($userProfile->$key != $value) {
-                                $fieldsToUpdateProfile[$key] = $value;
-                            }
-                        }
-                        if (!empty($fieldsToUpdateProfile)) {
-                            $userProfile->update($fieldsToUpdateProfile);
+            if ($user->user_type_id == 3) {
+                $partnerProfile = PartnerProfile::where('user_id', $id)->first();
+                if ($partnerProfile) {
+                    $fieldsToUpdatePartner = [];
+                    foreach ($request->all() as $key => $value) {
+                        if ($partnerProfile->$key != $value) {
+                            $fieldsToUpdatePartner[$key] = $value;
                         }
                     }
-                    break;
-
-                case 3: // Partner
-                    $partnerProfile = PartnerProfile::where('user_id', $id)->first();
-                    if ($partnerProfile) {
-                        $fieldsToUpdatePartner = [];
-                        foreach ($request->all() as $key => $value) {
-                            if ($partnerProfile->$key != $value) {
-                                $fieldsToUpdatePartner[$key] = $value;
-                            }
-                        }
-                        if (!empty($fieldsToUpdatePartner)) {
-                            $partnerProfile->update($fieldsToUpdatePartner);
+                    if (!empty($fieldsToUpdatePartner)) {
+                        $partnerProfile->update($fieldsToUpdatePartner);
+                    }
+                }
+            } else {
+                $userProfile = UserProfile::where('user_id', $id)->first();
+                if ($userProfile) {
+                    $fieldsToUpdateProfile = [];
+                    foreach ($request->all() as $key => $value) {
+                        if ($userProfile->$key != $value) {
+                            $fieldsToUpdateProfile[$key] = $value;
                         }
                     }
-                    break;
+                    if (!empty($fieldsToUpdateProfile)) {
+                        $userProfile->update($fieldsToUpdateProfile);
+                    }
+                }
             }
+
+            // Updating user location
+            UserLocation::updateOrCreate(
+                ['user_id' => $user->id],
+                ['city_id' => $request->city_id, 'address' => $request->address]
+            );
 
             // Updating profile picture and deleting old one if it's not the default one
             if ($request->hasFile('image')) {
