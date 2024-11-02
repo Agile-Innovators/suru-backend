@@ -85,6 +85,18 @@ class UserController extends Controller
             $user->profile = $partnerProfile;
         }
 
+        // Obtaining user location
+        $userLocation = UserLocation::select(
+            'cities.name as city',
+            'cities.id as city_id',
+            'user_locations.address'
+        )
+            ->leftJoin('cities', 'user_locations.city_id', '=', 'cities.id')
+            ->where('user_locations.user_id', $id)
+            ->first();
+
+        $user->location = $userLocation;
+
         return response()->json(
             $user,
             200
