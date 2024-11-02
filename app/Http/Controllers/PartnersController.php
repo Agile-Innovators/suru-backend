@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\PartnerCategory;
 use App\Models\PartnerService;
 use App\Models\PartnerProfile;
+use App\Models\Currency;
 use App\Models\User;
 use App\Models\BusinessService;
 use App\Models\UserLocation;
@@ -409,6 +410,18 @@ class PartnersController extends Controller
             return $request;
         });
 
+        // Cambiar el id de la categoría por el nombre
+        $partnerRequests->transform(function ($request) {
+            $request->category_name = PartnerCategory::find($request->partner_category_id)->name;
+            return $request;
+        });
+
+        // Cambiar el id del currency por el nombre
+        $partnerRequests->transform(function ($request) {
+            $request->currency_name = Currency::find($request->currency_id)->name;
+            return $request;
+        });
+
         return response()->json($partnerRequests);
     }
 
@@ -430,6 +443,7 @@ class PartnersController extends Controller
             return response()->json(['message' => 'Partner request not found'], 404);
         }
 
+        // Reemplazar el public_id por la URL
         $partnerRequest->image = cloudinary()->getUrl($partnerRequest->image_public_id);
         unset($partnerRequest->image_public_id);
 
@@ -440,6 +454,12 @@ class PartnersController extends Controller
         } else {
             $partnerRequest->location_name = 'Unknown Location';
         }
+
+        // Reemplazar el id de la categoría por el nombre
+        $partnerRequest->category_name = PartnerCategory::find($partnerRequest->partner_category_id)->name;
+
+        // Cambiar el id del currency por el nombre
+        $partnerRequest->currency_name = Currency::find($partnerRequest->currency_id)->name;
 
         return response()->json($partnerRequest);
     }
