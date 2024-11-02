@@ -24,7 +24,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::post('logout', [AuthController::class, 'logout']);
 
     //Endpoints Users Module
-    Route::post('/user/update/{id}', [UserController::class, 'update']);
+    Route::put('/user/update/{id}', [UserController::class, 'update']);
     Route::post('/user/{id}/update-password', [UserController::class, 'updatePassword']);
     Route::post('/user/reset-password', [UserController::class, 'resetPassword']);
     Route::post('/user/update/operational-hours/{id}', [UserController::class, 'updateOperationalHours']);
