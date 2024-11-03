@@ -210,6 +210,16 @@ class PartnersController extends Controller
         return response()->json($partner);
     }
 
+    public function getBusinessServicesByCategory(string $category_id){
+        $services = BusinessService::where('partner_category_id', $category_id)->get();
+
+        if ($services->isEmpty()) {
+            return response()->json(['message' => 'No services found for this category'], 404);
+        }
+
+        return response()->json($services);
+    }
+
     public function getPartnerServices(string $user_id)
     {
         $partner = PartnerProfile::where('user_id', $user_id)->first();

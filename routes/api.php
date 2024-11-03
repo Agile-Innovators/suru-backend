@@ -92,6 +92,7 @@ Route::get('/partners', [PartnersController::class, 'index']);
 Route::get('/partners/{category_id}', [PartnersController::class, 'getPartnersByCategory']);
 Route::get('/partner/{user_id}', [PartnersController::class, 'show']);
 Route::post('/partner-request', [PartnersController::class, 'storePartnerRequest']);
+Route::get('/services/category/{category_id}', [PartnersController::class, 'getBusinessServicesByCategory']);
 
 // Endpoints Appointments Module
 Route::get('/appointments', [AppointmentController::class, 'index']);
