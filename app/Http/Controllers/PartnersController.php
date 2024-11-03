@@ -233,6 +233,7 @@ class PartnersController extends Controller
             'partner_services.price',
             'partner_services.price_max',
             'business_services.name',
+            'business_services.id as business_services_id',
             'business_services.description'
         )
             ->join('business_services', 'partner_services.business_service_id', '=', 'business_services.id')
