@@ -229,6 +229,7 @@ class PartnersController extends Controller
         }
 
         $services = PartnerService::select(
+            'partner_services.id',
             'partner_services.price',
             'partner_services.price_max',
             'business_services.name',
