@@ -460,8 +460,8 @@ class UserController extends Controller
         );
 
         // Build the reset password URL
-        $url = 'http://localhost:5173/reset-password?token=' . $token . '&email=' . urlencode($request->email);
-        #$url = 'https://suru-development-seven.vercel.app/reset-password?token=' . $token . '&email=' . urlencode($request->email);
+        #$url = 'http://localhost:5173/reset-password?token=' . $token . '&email=' . urlencode($request->email);
+        $url = 'https://suru-development-seven.vercel.app/reset-password?token=' . $token . '&email=' . urlencode($request->email);
 
         // Send the email with the reset link
         Mail::to($request->email)->send(new PasswordResetMail($url));
