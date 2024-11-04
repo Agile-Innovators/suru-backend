@@ -157,7 +157,7 @@ class AuthController extends Controller
         if (!$token = JWTAuth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'message' => 'Invalid credentials',
-            ], 401);
+            ], 404);
         }
 
         // Recupera el usuario autenticado
