@@ -8,7 +8,7 @@
 <body>
     <h1>Restablecimiento de contraseña</h1>
     <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para completar el proceso:</p>
-    <a href="{{ $url }}" style="display: inline-block; background-color: #4CAF50; color: white; padding: 14px 25px; text-align: center; text-decoration: none;">Restablecer Contraseña</a>
+    <a href="{{ $url }}" style="display: inline-block; background-color: #0C9DC1; color: white; padding: 14px 25px; text-align: center; text-decoration: none;">Restablecer Contraseña</a>
     <p>Si no has solicitado restablecer tu contraseña, ignora este correo electrónico.</p>
     <p>Atentamente, el equipo de Suru</p>
 </body>
