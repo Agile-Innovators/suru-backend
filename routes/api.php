@@ -24,7 +24,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::post('logout', [AuthController::class, 'logout']);
 
     //Endpoints Users Module
-    Route::post('/user/update/{id}', [UserController::class, 'update']);
+    Route::put('/user/update/{id}', [UserController::class, 'update']);
     Route::post('/user/{id}/update-password', [UserController::class, 'updatePassword']);
     Route::post('/user/reset-password', [UserController::class, 'resetPassword']);
     Route::post('/user/update/operational-hours/{id}', [UserController::class, 'updateOperationalHours']);
@@ -65,10 +65,12 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::put('/appointment/reject/{appointment_id}/{user_id}', [AppointmentController::class, 'rejectAppointment']);
     Route::post('/filter-appointments', [AppointmentController::class, 'filterAppointments']);
 
+    Route::get('/available-operational-hours', [AppointmentController::class, 'showAvailableOperationalHours']);
+
     // Endpoints Favorites
     Route::get('/user/{user_id}/favorites', [FavoritesController::class, 'getFavoritesUser']);
     Route::get('/user/{user_id}/favorites/ids', [FavoritesController::class, 'getFavoritesUserIds']);
-    Route::Post('/user/favorites/add', [FavoritesController::class, 'addFavoriteProperty']);
+    Route::post('/user/favorites/add', [FavoritesController::class, 'addFavoriteProperty']);
     Route::delete('/user/favorites/remove', [FavoritesController::class, 'removeFavoriteProperty']);
 });
 

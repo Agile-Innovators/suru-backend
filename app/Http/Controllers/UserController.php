@@ -349,6 +349,28 @@ class UserController extends Controller
         }
     }
 
+    // Método encargado de mostrar las horar operativas disponibles de un usuario (aquellas en las que no tenga appointments en status "Scheduled")
+    public function showAvailableOperationalHours(Request $request, string $userId){
+        $operationalHours = UserOperationalHour::select(
+            'day_of_week',
+            'start_time',
+            'end_time',
+            'is_closed'
+        )
+            ->where('user_id', $userId)
+            ->whereHas('user', function ($query) {
+                $query->whereHas('appointments', function ($query) {
+                    $query->where('status', '!=', 'Scheduled');
+                }, '=', 0);
+            })
+            ->get()
+            ->toArray();
+
+        return response()->json([
+            'message' => 'Operational hours available',
+            'operational_hours' => $operationalHours,
+        ], 200);
+    }
 
     public function resetPassword(Request $request)
     {
