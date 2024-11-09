@@ -307,7 +307,7 @@ class UserController extends Controller
         if (!password_verify($request->old_password, $user->password)) {
             return response()->json([
                 'message' => 'Invalid old password',
-            ], 401);
+            ], 400);
         }
 
         try {
