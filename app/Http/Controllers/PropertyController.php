@@ -313,11 +313,7 @@ class PropertyController extends Controller
             ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
             ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
             ->where('properties.id', '!=', $property_id)
-            ->where(function ($query) use ($property) {
-                $query->where('properties.city_id', $property->city_id)
-                    ->orWhere('cities.region_id', $property->city->region_id)
-                    ->orWhere('regions.country_id', $property->city->region->country_id);
-            })
+            ->orderByRaw('CASE WHEN cities.id = ? THEN 0 WHEN regions.id = ? THEN 1 WHEN regions.country_id = ? THEN 2 ELSE 3 END', [$property->city_id, $property->city->region_id, $property->city->region->country_id])
             ->take(3)
             ->get();
 
@@ -326,7 +322,7 @@ class PropertyController extends Controller
             $property->utilities = $property->utilities()->get();
         }
 
-        if($properties->isEmpty()){
+        if ($properties->isEmpty()) {
             return response()->json([
                 'message' => 'There are no related properties'
             ], 404);
