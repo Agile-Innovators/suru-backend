@@ -37,7 +37,7 @@ class PropertyController extends Controller
             'properties.pets_allowed',
             'properties.green_area',
             'property_categories.name as property_category',
-            'property_categories.id as property_category_id',   
+            'property_categories.id as property_category_id',
             'property_transaction_types.name as property_transaction',
             'property_transaction_types.id as property_transaction_id',
             'cities.name as city',
@@ -269,14 +269,14 @@ class PropertyController extends Controller
     /**
      * Show 3 properties in the same city or region as the property with the given id
      */
-    public function showRelatedProperties(string $property_id){
+    public function showRelatedProperties(string $property_id)
+    {
         $property = Property::find($property_id);
 
         if (!$property) {
             return response()->json([
                 'message' => 'Property not found'
             ], 404);
-
         }
 
         $properties = Property::select(
@@ -296,7 +296,7 @@ class PropertyController extends Controller
             'properties.pets_allowed',
             'properties.green_area',
             'property_categories.name as property_category',
-            'property_categories.id as property_category_id',   
+            'property_categories.id as property_category_id',
             'property_transaction_types.name as property_transaction',
             'property_transaction_types.id as property_transaction_id',
             'cities.name as city',
@@ -312,107 +312,29 @@ class PropertyController extends Controller
             ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
             ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
             ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
-            ->where('city_id', $property->city_id)
-            ->orderBy('properties.id', 'desc')
+            ->where('properties.id', '!=', $property_id)
+            ->where(function ($query) use ($property) {
+                $query->where('properties.city_id', $property->city_id)
+                    ->orWhere('cities.region_id', $property->city->region_id)
+                    ->orWhere('regions.country_id', $property->city->region->country_id);
+            })
             ->take(3)
             ->get();
-
-        if($properties->count() < 3){
-            $properties = $properties->concat(Property::select(
-                'properties.id',
-                'properties.title',
-                'properties.description',
-                'properties.price',
-                'properties.rent_price',
-                'properties.deposit_price',
-                'properties.availability_date',
-                'properties.size_in_m2',
-                'properties.bedrooms',
-                'properties.bathrooms',
-                'properties.floors',
-                'properties.garages',
-                'properties.pools',
-                'properties.pets_allowed',
-                'properties.green_area',
-                'property_categories.name as property_category',
-                'property_categories.id as property_category_id',   
-                'property_transaction_types.name as property_transaction',
-                'property_transaction_types.id as property_transaction_id',
-                'cities.name as city',
-                'cities.id as city_id',
-                'regions.name as region',
-                'currencies.code as currency_code',
-                'payment_frequencies.name as payment_frequency',
-                'properties.user_id',
-            )
-                ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
-                ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
-                ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
-                ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
-                ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
-                ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
-                ->where('city_id', $property->city->region->id)
-                ->orderBy('properties.id', 'desc')
-                ->take(3)
-                ->get());
-        }
-
-        if($properties->count() < 3){
-            $properties = $properties->concat(Property::select(
-                'properties.id',
-                'properties.title',
-                'properties.description',
-                'properties.price',
-                'properties.rent_price',
-                'properties.deposit_price',
-                'properties.availability_date',
-                'properties.size_in_m2',
-                'properties.bedrooms',
-                'properties.bathrooms',
-                'properties.floors',
-                'properties.garages',
-                'properties.pools',
-                'properties.pets_allowed',
-                'properties.green_area',
-                'property_categories.name as property_category',
-                'property_categories.id as property_category_id',   
-                'property_transaction_types.name as property_transaction',
-                'property_transaction_types.id as property_transaction_id',
-                'cities.name as city',
-                'cities.id as city_id',
-                'regions.name as region',
-                'currencies.code as currency_code',
-                'payment_frequencies.name as payment_frequency',
-                'properties.user_id',
-            )
-                ->leftJoin('property_categories', 'property_categories.id', '=', 'properties.property_category_id')
-                ->leftJoin('property_transaction_types', 'property_transaction_types.id', '=', 'properties.property_transaction_type_id')
-                ->leftJoin('cities', 'cities.id', '=', 'properties.city_id')
-                ->leftJoin('regions', 'regions.id', '=', 'cities.region_id')
-                ->leftJoin('currencies', 'currencies.id', '=', 'properties.currency_id')
-                ->leftJoin('payment_frequencies', 'payment_frequencies.id', '=', 'properties.payment_frequency_id')
-                ->where('city_id', $property->city->region->country->id)
-                ->orderBy('properties.id', 'desc')
-                ->take(3)
-                ->get());
-        }
-
-        if($properties->count() < 3){
-            return response()->json([
-                'message' => 'No se encontraron propiedades relacionadas'
-            ], 404);
-        }
 
         foreach ($properties as $property) {
             $property->image = $property->propertyImages()->value('url');
             $property->utilities = $property->utilities()->get();
         }
 
-        $properties = $properties->take(3);
+        if($properties->isEmpty()){
+            return response()->json([
+                'message' => 'There are no related properties'
+            ], 404);
+        }
 
         return response()->json($properties);
     }
-    
+
 
     /**
      * Show the form for editing the specified resource.
@@ -756,16 +678,16 @@ class PropertyController extends Controller
 
             // verify if minPrice and maxPrice exists (property transaction SALE)
             if (isset($minPrice) && isset($maxPrice)) {
-        
+
                 // Filter by USD (currencyId = 1)
                 $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $minPrice, $maxPrice, $propertyTransactionId) {
-        
+
                     // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
                     if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
                         $q->whereRaw("
                             IFNULL(IF(properties.currency_id = 2, properties.price * ?, properties.price), 0) >= ?
                         ", [$CRCtoUSD, $minPrice]);
-        
+
                         if ($maxPrice !== "max") {
                             $q->whereRaw("
                                 IFNULL(IF(properties.currency_id = 2, properties.price * ?, properties.price), 0) <= ?
@@ -773,7 +695,7 @@ class PropertyController extends Controller
                         }
                     }
                 });
-        
+
                 // Filter by CRC (currencyId = 2)
                 $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $minPrice, $maxPrice, $propertyTransactionId) {
                     // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
@@ -781,7 +703,7 @@ class PropertyController extends Controller
                         $q->whereRaw("
                             IFNULL(IF(properties.currency_id = 1, properties.price * ?, properties.price), 0) >= ?
                         ", [$USDtoCRC, $minPrice]);
-        
+
                         if ($maxPrice !== "max") {
                             $q->whereRaw("
                                 IFNULL(IF(properties.currency_id = 1, properties.price * ?, properties.price), 0) <= ?
@@ -790,34 +712,34 @@ class PropertyController extends Controller
                     }
                 });
             }
-        
+
             // verify if depositPrice and rentPrice exists (property transaction RENT)
             if (isset($depositPrice) && isset($rentPrice)) {
-        
+
                 // Filter by USD (currencyId = 1)
                 $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $depositPrice, $rentPrice, $propertyTransactionId) {
-        
+
                     // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
                     if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
                         $q->whereRaw("
                             IFNULL(IF(properties.currency_id = 2, properties.rent_price * ?, properties.rent_price), 0) >= ?
                         ", [$CRCtoUSD, $rentPrice]);
-        
+
                         $q->whereRaw("
                             IFNULL(IF(properties.currency_id = 2, properties.deposit_price * ?, properties.deposit_price), 0) >= ?
                         ", [$CRCtoUSD, $depositPrice]);
                     }
                 });
-        
+
                 // Filter by CRC (currencyId = 2)
                 $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $depositPrice, $rentPrice, $propertyTransactionId) {
-                    
+
                     // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
                     if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
                         $q->whereRaw("
                             IFNULL(IF(properties.currency_id = 1, properties.rent_price * ?, properties.rent_price), 0) >= ?
                         ", [$USDtoCRC, $rentPrice]);
-        
+
                         $q->whereRaw("
                             IFNULL(IF(properties.currency_id = 1, properties.deposit_price * ?, properties.deposit_price), 0) >= ?
                         ", [$USDtoCRC, $depositPrice]);
@@ -825,20 +747,20 @@ class PropertyController extends Controller
                 });
             }
         }
-        
+
 
 
         // if (isset($currencyId)) {
 
         //     // verify if minPrice and maxPrice exists (property transaction SALE)
         //     if (isset($minPrice) && isset($maxPrice)) {
-        
+
         //         // Filter by USD (currencyId = 1)
         //         $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $minPrice, $maxPrice, $propertyTransactionId) {
-        
+
         //             // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
         //             if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
-        
+
         //                 // Check if price is not null or zero before applying filter
         //                 $q->when(function ($q) {
         //                     return !is_null($q->price) && $q->price != 0;
@@ -846,7 +768,7 @@ class PropertyController extends Controller
         //                     $q->whereRaw("
         //                         IFNULL(IF(properties.currency_id = 2, properties.price * ?, properties.price), 0) >= ?
         //                     ", [$CRCtoUSD, $minPrice]);
-        
+
         //                     if ($maxPrice !== "max") {
         //                         $q->whereRaw("
         //                             IFNULL(IF(properties.currency_id = 2, properties.price * ?, properties.price), 0) <= ?
@@ -855,13 +777,13 @@ class PropertyController extends Controller
         //                 });
         //             }
         //         });
-        
+
         //         // Filter by CRC (currencyId = 2)
         //         $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $minPrice, $maxPrice, $propertyTransactionId) {
-        
+
         //             // filter by minPrice and maxPrice if transaction is sell or dual (1 o 3)
         //             if ($propertyTransactionId == 1 || $propertyTransactionId == 3) {
-        
+
         //                 // Check if price is not null or zero before applying filter
         //                 $q->when(function ($q) {
         //                     return !is_null($q->price) && $q->price != 0;
@@ -869,7 +791,7 @@ class PropertyController extends Controller
         //                     $q->whereRaw("
         //                         IFNULL(IF(properties.currency_id = 1, properties.price * ?, properties.price), 0) >= ?
         //                     ", [$USDtoCRC, $minPrice]);
-        
+
         //                     if ($maxPrice !== "max") {
         //                         $q->whereRaw("
         //                             IFNULL(IF(properties.currency_id = 1, properties.price * ?, properties.price), 0) <= ?
@@ -879,16 +801,16 @@ class PropertyController extends Controller
         //             }
         //         });
         //     }
-        
+
         //     // verify if depositPrice and rentPrice exists (property transaction RENT)
         //     if (isset($depositPrice) && isset($rentPrice)) {
-        
+
         //         // Filter by USD (currencyId = 1)
         //         $query->when($currencyId == 1, function ($q) use ($CRCtoUSD, $depositPrice, $rentPrice, $propertyTransactionId) {
-        
+
         //             // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
         //             if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
-        
+
         //                 // Check if rent_price is not null or zero before applying filter
         //                 $q->when(function ($q) {
         //                     return !is_null($q->rent_price) && $q->rent_price != 0;
@@ -897,7 +819,7 @@ class PropertyController extends Controller
         //                         IFNULL(IF(properties.currency_id = 2, properties.rent_price * ?, properties.rent_price), 0) >= ?
         //                     ", [$CRCtoUSD, $rentPrice]);
         //                 });
-        
+
         //                 // Check if deposit_price is not null or zero before applying filter
         //                 $q->when(function ($q) {
         //                     return !is_null($q->deposit_price) && $q->deposit_price != 0;
@@ -908,13 +830,13 @@ class PropertyController extends Controller
         //                 });
         //             }
         //         });
-        
+
         //         // Filter by CRC (currencyId = 2)
         //         $query->when($currencyId == 2, function ($q) use ($USDtoCRC, $depositPrice, $rentPrice, $propertyTransactionId) {
-        
+
         //             // filter by rentPrice and depositPrice if transaction is rent or dual (2 o 3)
         //             if ($propertyTransactionId == 2 || $propertyTransactionId == 3) {
-        
+
         //                 // Check if rent_price is not null or zero before applying filter
         //                 $q->when(function ($q) {
         //                     return !is_null($q->rent_price) && $q->rent_price != 0;
@@ -923,7 +845,7 @@ class PropertyController extends Controller
         //                         IFNULL(IF(properties.currency_id = 1, properties.rent_price * ?, properties.rent_price), 0) >= ?
         //                     ", [$USDtoCRC, $rentPrice]);
         //                 });
-        
+
         //                 // Check if deposit_price is not null or zero before applying filter
         //                 $q->when(function ($q) {
         //                     return !is_null($q->deposit_price) && $q->deposit_price != 0;
@@ -936,7 +858,7 @@ class PropertyController extends Controller
         //         });
         //     }
         // }
-        
+
 
 
 
