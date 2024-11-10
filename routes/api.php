@@ -30,6 +30,7 @@ Route::group(['middleware' => ['auth.jwt']], function () {
     Route::post('/user/update/operational-hours/{id}', [UserController::class, 'updateOperationalHours']);
     Route::get('/user/{id}', [UserController::class, 'show']);
     Route::get('/user/operational-hours/{id}', [UserController::class, 'showOperationalHours']);
+    Route::get('/available-operational-hours/{userId}', [UserController::class, 'showAvailableOperationalHours']);
 
     // Endpoints Properties Module
     Route::post('/properties', [PropertyController::class, 'store']);

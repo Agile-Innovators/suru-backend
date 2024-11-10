@@ -294,9 +294,9 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Only the owner or requester can cancell this appointment'], 403);
         }
 
-        if (($appointment->status !== 'Scheduled') || ($appointment->status !== 'Pending')) {
+        if ($appointment->status !== 'Scheduled' && $appointment->status !== 'Pending') {
             return response()->json(['message' => 'Only scheduled or pending appointments can be cancelled'], 400);
-        }
+        }        
 
         if ($appointment->status === 'Cancelled') {
             return response()->json(['message' => 'Appointment is already cancelled'], 400);

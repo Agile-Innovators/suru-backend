@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\UserLocation;
+use App\Models\Appointment;
 
 use App\Models\UserOperationalHour;
 use App\Models\UserProfile;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Models\PasswordResetToken;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 // Email
 use App\Mail\PasswordResetMail;
@@ -123,7 +125,8 @@ class UserController extends Controller
     //     ], 200);
     // }
 
-    public function showOperationalHours(string $id_user){
+    public function showOperationalHours(string $id_user)
+    {
         $operationalHours = UserOperationalHour::select(
             'day_of_week',
             'start_time',
@@ -378,27 +381,92 @@ class UserController extends Controller
     }
 
     // Método encargado de mostrar las horar operativas disponibles de un usuario (aquellas en las que no tenga appointments en status "Scheduled")
-    public function showAvailableOperationalHours(Request $request, string $userId){
-        $operationalHours = UserOperationalHour::select(
-            'day_of_week',
-            'start_time',
-            'end_time',
-            'is_closed'
-        )
-            ->where('user_id', $userId)
-            ->whereHas('user', function ($query) {
-                $query->whereHas('appointments', function ($query) {
-                    $query->where('status', '!=', 'Scheduled');
-                }, '=', 0);
-            })
-            ->get()
-            ->toArray();
+    public function showAvailableOperationalHours(Request $request, string $userId)
+{
+    // Obtener las horas operacionales del usuario
+    $operationalHours = UserOperationalHour::where('user_id', $userId)
+        ->get();
 
-        return response()->json([
-            'message' => 'Operational hours available',
-            'operational_hours' => $operationalHours,
-        ], 200);
+    $availableHours = [];
+
+    // Iterar sobre cada hora operacional para obtener las horas disponibles
+    foreach ($operationalHours as $operationalHour) {
+        // Filtrar las citas solo para el día de la semana y el usuario
+        $appointments = Appointment::where('user_id', $userId)
+            ->where('status', 'Scheduled')
+            ->where('day_of_week', $operationalHour->day_of_week)
+            ->get();
+
+        // Llamar a la función para obtener los intervalos de tiempo disponibles
+        $dayAvailableSlots = $this->getAvailableTimeSlots(
+            $operationalHour->start_time,
+            $operationalHour->end_time,
+            $appointments
+        );
+
+        // Si existen horas disponibles, agregarlas a la respuesta
+        if (!empty($dayAvailableSlots)) {
+            $availableHours[] = [
+                'day_of_week' => $operationalHour->day_of_week,
+                'available_slots' => $dayAvailableSlots
+            ];
+        }
     }
+
+    return response()->json([
+        'message' => 'Operational hours available',
+        'available_hours' => $availableHours
+    ], 200);
+}
+
+private function getAvailableTimeSlots($start_time, $end_time, $appointments)
+{
+    $availableSlots = [];
+
+    // Convertir las horas de inicio y fin en objetos DateTime para compararlas
+    $start = \Carbon\Carbon::parse($start_time);
+    $end = \Carbon\Carbon::parse($end_time);
+
+    // Generar una lista de todas las horas en el rango operativo
+    $currentTime = $start;
+    while ($currentTime->lt($end)) {
+        $slotStart = $currentTime->format('H:i');
+        $slotEnd = $currentTime->addMinutes(30)->format('H:i'); // Asumimos intervalos de 30 minutos
+
+        // Verificar si alguna cita ocupa este intervalo de tiempo
+        $isSlotAvailable = true;
+        foreach ($appointments as $appointment) {
+            $appointmentStart = \Carbon\Carbon::parse($appointment->start_time);
+            $appointmentEnd = \Carbon\Carbon::parse($appointment->end_time);
+
+            // Si el intervalo de la cita se solapa con el intervalo de la hora disponible, marcar como ocupado
+            if ($this->isTimeSlotOccupied($slotStart, $slotEnd, $appointmentStart, $appointmentEnd)) {
+                $isSlotAvailable = false;
+                break;
+            }
+        }
+
+        // Si el intervalo está libre, agregarlo a la lista de horas disponibles
+        if ($isSlotAvailable) {
+            $availableSlots[] = ['start_time' => $slotStart, 'end_time' => $slotEnd];
+        }
+
+        // Avanzar al siguiente intervalo de 30 minutos
+        $currentTime = $currentTime->addMinutes(30);
+    }
+
+    return $availableSlots;
+}
+
+private function isTimeSlotOccupied($slotStart, $slotEnd, $appointmentStart, $appointmentEnd)
+{
+    // Verificar si hay solapamiento entre los intervalos de tiempo
+    return !(
+        \Carbon\Carbon::parse($slotEnd)->lte($appointmentStart) ||
+        \Carbon\Carbon::parse($slotStart)->gte($appointmentEnd)
+    );
+}
+
 
     public function resetPassword(Request $request)
     {
