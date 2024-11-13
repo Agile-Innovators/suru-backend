@@ -148,6 +148,9 @@ class PartnersController extends Controller
 
         $category_id = $request->category_id;
         $location_id = $request->location_id;
+        $search_text = $request->search_text;
+
+        
 
         $partners = PartnerProfile::select(
             'partner_profiles.description',
@@ -168,6 +171,9 @@ class PartnersController extends Controller
             //filtrar por ubicacion
             ->when( $location_id != 0, function ($query) use ( $location_id) {
                 return $query->where('user_locations.city_id',  $location_id);
+            })
+            ->when( $search_text != null, function ($query) use ( $search_text) {
+                return $query->where('users.name', 'like', '%' . $search_text . '%');
             })
             ->get();
         
