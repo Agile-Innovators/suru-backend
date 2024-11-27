@@ -143,6 +143,44 @@ class PartnersController extends Controller
         return response()->json($partners);
     }
 
+    public function filterPartners(Request $request)
+    {
+
+        $category_id = $request->category_id;
+        $location_id = $request->location_id;
+        $search_text = $request->search_text;
+
+        
+
+        $partners = PartnerProfile::select(
+            'partner_profiles.description',
+            'partner_profiles.user_id',
+            'partner_categories.name as category_name',
+            'users.name as partner_name',
+            'users.image_url as image',
+            'user_locations.city_id'
+        )
+            ->join('users', 'partner_profiles.user_id', '=', 'users.id')
+            ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
+            ->join('user_locations', 'user_locations.user_id', '=', 'users.id')
+            //when permite agregar condiciones a una consulta
+            //filtrar por categoria
+            ->when($category_id != 0, function ($query) use ($category_id) {
+                return $query->where('partner_profiles.partner_category_id', $category_id);
+            })
+            //filtrar por ubicacion
+            ->when( $location_id != 0, function ($query) use ( $location_id) {
+                return $query->where('user_locations.city_id',  $location_id);
+            })
+            ->when( $search_text != null, function ($query) use ( $search_text) {
+                return $query->where('users.name', 'like', '%' . $search_text . '%');
+            })
+            ->get();
+        
+        return response()->json($partners,200);
+        
+    }
+
     public function show(string $user_id)
     {
         $partner = User::select(
@@ -210,7 +248,8 @@ class PartnersController extends Controller
         return response()->json($partner);
     }
 
-    public function getBusinessServicesByCategory(string $category_id){
+    public function getBusinessServicesByCategory(string $category_id)
+    {
         $services = BusinessService::where('partner_category_id', $category_id)->get();
 
         if ($services->isEmpty()) {
