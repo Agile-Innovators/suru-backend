@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restablecer Contraseña</title>
+    <title>Password Reset</title>
 </head>
 <body>
-    <h1>Restablecimiento de contraseña</h1>
-    <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para completar el proceso:</p>
+    <h1>Password Reset</h1>
+    <p>You have requested to reset your password. Click on the link below to complete the process:</p>
     <a href="{{ $url }}" style="display: inline-block; background-color: #0C9DC1; color: white; padding: 14px 25px; text-align: center; text-decoration: none;">Restablecer Contraseña</a>
-    <p>Si no has solicitado restablecer tu contraseña, ignora este correo electrónico.</p>
-    <p>Atentamente, el equipo de Suru</p>
+    <p>If you have not requested to reset your password, please ignore this email.</p>
+    <p>Suru team</p>
 </body>
 </html>
