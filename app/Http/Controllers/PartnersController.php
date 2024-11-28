@@ -563,6 +563,7 @@ class PartnersController extends Controller
             'city_id' => $request->city_id,
             'address' => $request->address,
             'partner_category_id' => $request->partner_category_id,
+            'partner_comments' => $request->partner_comments
         ]);
 
         // Upload the image if it exists
