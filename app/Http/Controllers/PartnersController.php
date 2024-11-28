@@ -195,6 +195,7 @@ class PartnersController extends Controller
             'partner_profiles.tiktok_url',
             'partner_profiles.currency_id',
             'partner_categories.name as category_name',
+            'partner_categories.id as category_id'
         )
             ->join('partner_profiles', 'partner_profiles.user_id', '=', 'users.id')
             ->join('partner_categories', 'partner_profiles.partner_category_id', '=', 'partner_categories.id')
