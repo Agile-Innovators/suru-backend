@@ -161,7 +161,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'name' => 'required|string',
             'phone_number' => 'required|string',
-            'city_id' => 'required|integer',
+            'city_id' => 'nullable|integer',
             'address' => 'nullable|string',
 
             // Conditional validations for regular users
@@ -228,10 +228,12 @@ class UserController extends Controller
             }
 
             // Updating user location
-            UserLocation::updateOrCreate(
-                ['user_id' => $user->id],
-                ['city_id' => $request->city_id, 'address' => $request->address]
-            );
+            if ($request->city_id !== null) {
+                UserLocation::updateOrCreate(
+                    ['user_id' => $user->id],
+                    ['city_id' => $request->city_id, 'address' => $request->address]
+                );
+            }
 
             // Updating profile picture and deleting old one if it's not the default one
             if ($request->hasFile('image')) {
